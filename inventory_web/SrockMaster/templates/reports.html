@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+
+{% block title %}Reports - Inventory Management{% endblock %}
+
+{% block content %}
+<h1>Reports</h1>
+
+<div class="report-section">
+    <h2>Monthly Report</h2>
+    <form method="GET" action="{% url 'reports' %}" class="form-inline">
+        <div class="form-group">
+            <label for="month">Month:</label>
+            <select id="month" name="month" class="form-control">
+                {% for m in months %}
+                <option value="{{ m.0 }}" {% if m.0 == selected_month %}selected{% endif %}>{{ m.1 }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="year">Year:</label>
+            <select id="year" name="year" class="form-control">
+                {% for y in years %}
+                <option value="{{ y }}" {% if y == selected_year %}selected{% endif %}>{{ y }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="btn">Generate Report</button>
+    </form>
+
+    {% if monthly_report %}
+    <div class="report-results">
+        <h3>Results for {{ monthly_report.month_name }} {{ monthly_report.year }}</h3>
+        <table class="table">
+            <tr>
+                <th>Revenue</th>
+                <td>${{ monthly_report.revenue|floatformat:2 }}</td>
+            </tr>
+            <tr>
+                <th>Expenses</th>
+                <td>${{ monthly_report.expenses|floatformat:2 }}</td>
+            </tr>
+            <tr>
+                <th>Profit</th>
+                <td>${{ monthly_report.profit|floatformat:2 }}</td>
+            </tr>
+        </table>
+    </div>
+    {% endif %}
+</div>
+
+<div class="report-section">
+    <h2>Top Selling Products</h2>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Product</th>
+                <th>Category</th>
+                <th>Total Sales</th>
+                <th>Revenue</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for product in top_selling %}
+            <tr>
+                <td>{{ product.name }}</td>
+                <td>{{ product.category }}</td>
+                <td>{{ product.total_sales }}</td>
+                <td>${{ product.revenue|floatformat:2 }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="report-section">
+    <h2>Low Stock Alert</h2>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Product</th>
+                <th>Current Stock</th>
+                <th>Minimum Required</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for product in low_stock %}
+            <tr>
+                <td>{{ product.name }}</td>
+                <td>{{ product.quantity }}</td>
+                <td>{{ product.min_required }}</td>
+                <td>
+                    {% if product.quantity <= product.min_required %}
+                    <span class="alert">Restock Required</span>
+                    {% else %}
+                    <span class="good">OK</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Inventory Management{% endblock %}
+
+{% block content %}
+<h1>Dashboard</h1>
+<div class="dashboard-stats">
+    <div class="stat-card">
+        <h3>Total Products</h3>
+        <p>{{ total_products }}</p>
+    </div>
+    <div class="stat-card">
+        <h3>Low Stock Items</h3>
+        <p>{{ low_stock_count }}</p>
+    </div>
+    <div class="stat-card">
+        <h3>Total Stock Value</h3>
+        <p>${{ total_value|floatformat:2 }}</p>
+    </div>
+</div>
+
+<div class="recent-activities">
+    <h2>Recent Transactions</h2>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Product</th>
+                <th>Type</th>
+                <th>Quantity</th>
+                <th>Price</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for transaction in recent_transactions %}
+            <tr>
+                <td>{{ transaction.date }}</td>
+                <td>{{ transaction.produit.name }}</td>
+                <td>{{ transaction.get_type_display }}</td>
+                <td>{{ transaction.quantity }}</td>
+                <td>${{ transaction.price }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
