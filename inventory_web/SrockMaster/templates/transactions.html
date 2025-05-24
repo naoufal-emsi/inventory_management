@@ -71,7 +71,7 @@
             <td>{{ transaction.produit.name }}</td>
             <td>{{ transaction.quantity }}</td>
             <td>${{ transaction.price }}</td>
-            <td>${{ transaction.price|multiply:transaction.quantity }}</td>
+            <td>${{ transaction.total|floatformat:2 }}</td>
         </tr>
         {% endfor %}
     </tbody>

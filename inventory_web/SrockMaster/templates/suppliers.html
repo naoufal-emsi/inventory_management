@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block title %}Suppliers - StockPro{% endblock %}
+{% block content %}
+<h1>Suppliers</h1>
+<div class="form-section">
+    <table class="table">
+        <thead>
+            <tr><th>Name</th><th>Contact</th><th>Email</th><th>Phone</th><th>Address</th></tr>
+        </thead>
+        <tbody>
+            {% for supplier in suppliers %}
+            <tr>
+                <td>{{ supplier.name }}</td>
+                <td>{{ supplier.contact }}</td>
+                <td>{{ supplier.email }}</td>
+                <td>{{ supplier.phone }}</td>
+                <td>{{ supplier.address }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

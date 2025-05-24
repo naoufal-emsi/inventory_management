@@ -14,4 +14,11 @@ urlpatterns = [
     path('accounts/login/', views.login_view, name='login'),
     path('accounts/logout/', views.logout_view, name='logout'),
     path('accounts/signup/', views.signup_view, name='signup'),
+    path('profile/', views.profile, name='profile'),
+    path('settings/', views.settings_view, name='settings'),
+    path('suppliers/', views.suppliers, name='suppliers'),
+    path('customers/', views.customers, name='customers'),
+    path('activity-log/', views.activity_log, name='activity_log'),
+    path('analytics/', views.analytics, name='analytics'),
+    path('support/', views.support, name='support'),
 ]

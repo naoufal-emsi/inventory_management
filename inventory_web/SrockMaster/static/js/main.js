@@ -1,42 +1,53 @@
-// Form validation
-function validateForm() {
-    const name = document.getElementById('name').value;
-    const price = document.getElementById('price').value;
-    const quantity = document.getElementById('quantity').value;
-    const category = document.getElementById('category').value;
-
-    if (!name || !price || !quantity || !category) {
-        alert('Please fill in all fields');
-        return false;
-    }
-
-    if (price < 0 || quantity < 0) {
-        alert('Price and quantity must be positive numbers');
-        return false;
-    }
-
-    return true;
-}
-
-// Delete confirmation
-function confirmDelete(productId) {
-    if (confirm('Are you sure you want to delete this product?')) {
-        document.getElementById(`delete-form-${productId}`).submit();
-    }
-}
-
-// Search functionality
+// Search/filter products in inventory table
 function searchProducts() {
-    const input = document.getElementById('searchInput');
+    const input = document.getElementById("searchInput");
     const filter = input.value.toLowerCase();
-    const table = document.getElementById('productsTable');
-    const rows = table.getElementsByTagName('tr');
-
-    for (let i = 1; i < rows.length; i++) {
-        const nameCell = rows[i].getElementsByTagName('td')[1];
-        if (nameCell) {
-            const text = nameCell.textContent || nameCell.innerText;
-            rows[i].style.display = text.toLowerCase().indexOf(filter) > -1 ? '' : 'none';
+    const table = document.getElementById("productsTable");
+    const trs = table.getElementsByTagName("tr");
+    for (let i = 1; i < trs.length; i++) {
+        let show = false;
+        const tds = trs[i].getElementsByTagName("td");
+        for (let j = 0; j < tds.length - 1; j++) {
+            if (tds[j].textContent.toLowerCase().indexOf(filter) > -1) {
+                show = true;
+                break;
+            }
         }
+        trs[i].style.display = show ? "" : "none";
     }
+}
+
+// Delete confirmation modal
+let deleteProductId = null;
+function confirmDelete(productId, productName) {
+    deleteProductId = productId;
+    document.getElementById("deleteModalText").textContent = `Are you sure you want to delete "${productName}"?`;
+    document.getElementById("deleteModal").style.display = "flex";
+}
+function closeModal() {
+    document.getElementById("deleteModal").style.display = "none";
+    deleteProductId = null;
+}
+document.addEventListener("DOMContentLoaded", function() {
+    const btn = document.getElementById("confirmDeleteBtn");
+    if (btn) {
+        btn.onclick = function() {
+            if (deleteProductId) {
+                document.getElementById(`delete-form-${deleteProductId}`).submit();
+            }
+        };
+    }
+});
+
+// Simple form validation for add product
+function validateForm() {
+    const name = document.getElementById("name").value.trim();
+    const category = document.getElementById("category").value.trim();
+    const price = document.getElementById("price").value;
+    const quantity = document.getElementById("quantity").value;
+    if (!name || !category || price <= 0 || quantity < 0) {
+        alert("Please fill all fields with valid values.");
+        return false;
+    }
+    return true;
 }

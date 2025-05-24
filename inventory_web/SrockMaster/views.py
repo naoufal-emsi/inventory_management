@@ -3,7 +3,8 @@ from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib import messages
-from .models import Produit, Transaction
+from .models import Produit, Transaction, Supplier, Customer, ActivityLog
+from django.contrib.auth.models import User
 from .services.inventory_manager import InventoryManager
 from .services.manager import Manager
 from datetime import datetime
@@ -173,3 +174,40 @@ def reports(request):
         'selected_year': selected_year,
     }
     return render(request, 'reports.html', context)
+
+@login_required
+def profile(request):
+    return render(request, 'profile.html', {'user': request.user})
+
+@login_required
+def settings_view(request):
+    return render(request, 'settings.html')
+
+@login_required
+def suppliers(request):
+    suppliers = Supplier.objects.all()
+    return render(request, 'suppliers.html', {'suppliers': suppliers})
+
+@login_required
+def customers(request):
+    customers = Customer.objects.all()
+    return render(request, 'customers.html', {'customers': customers})
+
+@login_required
+def activity_log(request):
+    logs = ActivityLog.objects.all().order_by('-timestamp')[:100]
+    return render(request, 'activity_log.html', {'logs': logs})
+
+@login_required
+def analytics(request):
+    # Dummy analytics data for now
+    data = {
+        'total_users': User.objects.count(),
+        'total_suppliers': Supplier.objects.count(),
+        'total_customers': Customer.objects.count(),
+    }
+    return render(request, 'analytics.html', data)
+
+@login_required
+def support(request):
+    return render(request, 'support.html')

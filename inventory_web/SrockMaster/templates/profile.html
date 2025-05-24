@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block title %}Profile - StockPro{% endblock %}
+{% block content %}
+<h1>Profile</h1>
+<div class="form-section">
+    <p><strong>Username:</strong> {{ user.username }}</p>
+    <p><strong>Email:</strong> {{ user.email }}</p>
+    <p><strong>Role:</strong> {{ user.profile.get_role_display }}</p>
+    <p><strong>Phone:</strong> {{ user.profile.phone }}</p>
+</div>
+{% endblock %}
