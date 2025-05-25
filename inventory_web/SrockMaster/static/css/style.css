@@ -71,6 +71,9 @@ body {
     display: flex;
     flex-direction: column;
     z-index: 100;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #4f8ef7 #1a1d23;
 }
 .sidebar .sidebar-header {
     font-size: 1.5rem;
@@ -115,6 +118,11 @@ body {
     color: #aaa;
     border-top: 1px solid #222;
     text-align: center;
+}
+.sidebar-content {
+    position: relative;
+    height: calc(100vh - 64px - 50px); /* Subtract header and footer heights */
+    overflow-y: auto;
 }
 
 /* Main content shift */
@@ -371,4 +379,22 @@ body {
     min-width: 300px;
     max-width: 90vw;
     box-shadow: 0 4px 24px rgba(99,102,241,0.13);
+}
+
+/* Custom scrollbar styling */
+.sidebar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+    background: #1a1d23;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+    background: #4f8ef7;
+    border-radius: 3px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+    background: #818cf8;
 }

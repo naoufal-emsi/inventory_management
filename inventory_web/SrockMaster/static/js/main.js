@@ -51,3 +51,38 @@ function validateForm() {
     }
     return true;
 }
+
+// Sidebar scroll functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const sidebar = document.querySelector('.sidebar');
+    const sidebarContent = document.querySelector('.sidebar-content');
+
+    if (sidebar && sidebarContent) {
+        // Smooth scroll for sidebar links
+        sidebar.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href');
+                const targetElement = document.querySelector(targetId);
+                
+                if (targetElement) {
+                    sidebarContent.scrollTo({
+                        top: targetElement.offsetTop - 20,
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+
+        // Save scroll position
+        sidebarContent.addEventListener('scroll', function() {
+            localStorage.setItem('sidebarScrollPos', this.scrollTop);
+        });
+
+        // Restore scroll position
+        const savedScrollPos = localStorage.getItem('sidebarScrollPos');
+        if (savedScrollPos) {
+            sidebarContent.scrollTop = parseInt(savedScrollPos);
+        }
+    }
+});
