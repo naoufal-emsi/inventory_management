@@ -3,8 +3,7 @@ from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib import messages
-from .models import Produit, Transaction, Supplier, Customer, ActivityLog
-from django.contrib.auth.models import User
+from .models import Produit, Transaction, ActivityLog, CustomUser, SupplierProfile, StaffProfile, Customer, Purchase, CustomUserCreationForm, CustomerForm, PurchaseForm
 from .services.inventory_manager import InventoryManager
 from .services.manager import Manager
 from datetime import datetime
@@ -15,16 +14,22 @@ report_manager = Manager()
 
 def signup_view(request):
     if request.method == 'POST':
-        form = UserCreationForm(request.POST)
+        form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
+            if user.user_type == 'supplier':
+                SupplierProfile.objects.create(user=user)
+            elif user.user_type == 'staff':
+                StaffProfile.objects.create(user=user)
             login(request, user)
             messages.success(request, 'Account created successfully!')
             return redirect('dashboard')
         else:
             for error in form.errors.values():
                 messages.error(request, error)
-    return render(request, 'signup.html')
+    else:
+        form = CustomUserCreationForm()
+    return render(request, 'signup.html', {'form': form})
 
 def login_view(request):
     if request.method == 'POST':
@@ -185,13 +190,33 @@ def settings_view(request):
 
 @login_required
 def suppliers(request):
-    suppliers = Supplier.objects.all()
+    suppliers = SupplierProfile.objects.all()
     return render(request, 'suppliers.html', {'suppliers': suppliers})
 
 @login_required
 def customers(request):
+    if request.method == 'POST':
+        customer_form = CustomerForm(request.POST)
+        purchase_form = PurchaseForm(request.POST)
+        if customer_form.is_valid() and purchase_form.is_valid():
+            customer = customer_form.save()
+            purchase = purchase_form.save(commit=False)
+            purchase.customer = customer
+            purchase.added_by = request.user
+            purchase.save()
+            messages.success(request, 'Customer and purchase recorded!')
+            return redirect('customers')
+    else:
+        customer_form = CustomerForm()
+        purchase_form = PurchaseForm()
     customers = Customer.objects.all()
-    return render(request, 'customers.html', {'customers': customers})
+    purchases = Purchase.objects.select_related('customer', 'product').all().order_by('-date')
+    return render(request, 'customers.html', {
+        'customers': customers,
+        'purchases': purchases,
+        'customer_form': customer_form,
+        'purchase_form': purchase_form,
+    })
 
 @login_required
 def activity_log(request):
@@ -200,11 +225,10 @@ def activity_log(request):
 
 @login_required
 def analytics(request):
-    # Dummy analytics data for now
     data = {
-        'total_users': User.objects.count(),
-        'total_suppliers': Supplier.objects.count(),
-        'total_customers': Customer.objects.count(),
+        'total_users': CustomUser.objects.count(),
+        'total_suppliers': SupplierProfile.objects.count(),
+        'total_customers': 0,  # No Customer model
     }
     return render(request, 'analytics.html', data)
 

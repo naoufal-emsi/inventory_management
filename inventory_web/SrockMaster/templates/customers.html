@@ -3,6 +3,43 @@
 {% block content %}
 <h1>Customers</h1>
 <div class="form-section">
+    <h2>Add Customer & Purchase</h2>
+    <form method="POST">
+        {% csrf_token %}
+        <div class="form-group">
+            {{ customer_form.name.label_tag }}
+            {{ customer_form.name }}
+        </div>
+        <div class="form-group">
+            {{ customer_form.email.label_tag }}
+            {{ customer_form.email }}
+        </div>
+        <div class="form-group">
+            {{ customer_form.phone.label_tag }}
+            {{ customer_form.phone }}
+        </div>
+        <div class="form-group">
+            {{ customer_form.address.label_tag }}
+            {{ customer_form.address }}
+        </div>
+        <div class="form-group">
+            {{ purchase_form.product.label_tag }}
+            {{ purchase_form.product }}
+        </div>
+        <div class="form-group">
+            {{ purchase_form.quantity.label_tag }}
+            {{ purchase_form.quantity }}
+        </div>
+        <div class="form-group">
+            {{ purchase_form.price.label_tag }}
+            {{ purchase_form.price }}
+        </div>
+        <button type="submit" class="btn btn-success">Add Customer & Purchase</button>
+    </form>
+</div>
+
+<div class="form-section">
+    <h2>Customer List</h2>
     <table class="table">
         <thead>
             <tr><th>Name</th><th>Email</th><th>Phone</th><th>Address</th></tr>
@@ -14,6 +51,27 @@
                 <td>{{ customer.email }}</td>
                 <td>{{ customer.phone }}</td>
                 <td>{{ customer.address }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="form-section">
+    <h2>Purchase History</h2>
+    <table class="table">
+        <thead>
+            <tr><th>Date</th><th>Customer</th><th>Product</th><th>Quantity</th><th>Price</th><th>Added By</th></tr>
+        </thead>
+        <tbody>
+            {% for purchase in purchases %}
+            <tr>
+                <td>{{ purchase.date }}</td>
+                <td>{{ purchase.customer.name }}</td>
+                <td>{{ purchase.product.name }}</td>
+                <td>{{ purchase.quantity }}</td>
+                <td>${{ purchase.price }}</td>
+                <td>{{ purchase.added_by.username }}</td>
             </tr>
             {% endfor %}
         </tbody>
