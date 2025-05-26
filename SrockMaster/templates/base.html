@@ -87,6 +87,9 @@
                 </div>
             {% endfor %}
         {% endif %}
+        <div class="debug-info">
+            <p>User Type: {{ user.user_type }}</p>
+        </div>
         {% block content %}
         {% endblock %}
     </div>
