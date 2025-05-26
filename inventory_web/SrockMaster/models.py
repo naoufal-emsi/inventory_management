@@ -10,6 +10,9 @@ class CustomUser(AbstractUser):
         ('supplier', 'Supplier'),
     )
     user_type = models.CharField(max_length=10, choices=USER_TYPE_CHOICES, default='staff')
+    contact = models.CharField(max_length=100, blank=True, null=True)
+    phone = models.CharField(max_length=20, blank=True, null=True)
+    address = models.TextField(blank=True, null=True)
     # You can add more fields if needed
 
 class Produit(models.Model):
@@ -62,13 +65,13 @@ class StaffProfile(models.Model):
         return self.user.username
 
 class ActivityLog(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     action = models.CharField(max_length=255)
     timestamp = models.DateTimeField(auto_now_add=True)
-    details = models.TextField(blank=True)
+    details = models.TextField(blank=True, null=True)
 
     def __str__(self):
-        return f"{self.user} - {self.action} at {self.timestamp}"
+        return f"{self.user.username} - {self.action} at {self.timestamp}"
 
 class CustomUserCreationForm(forms.ModelForm):
     password1 = forms.CharField(label='Password', widget=forms.PasswordInput)

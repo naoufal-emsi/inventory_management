@@ -19,7 +19,7 @@
                 <span class="icon"><i class="fas fa-tachometer-alt"></i></span>Dashboard
             </a></li>
 
-            {% if not user.is_supplier_user %}
+            {% if request.user.is_superuser or not user.is_supplier_user %}
                 <li><a href="{% url 'inventory' %}" class="{% if 'inventory' in request.path %}active{% endif %}">
                     <span class="icon"><i class="fas fa-boxes"></i></span>Inventory
                 </a></li>

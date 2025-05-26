@@ -8,6 +8,7 @@ from .services.inventory_manager import InventoryManager
 from .services.manager import Manager
 from datetime import datetime
 import calendar
+from django.db.models import Q
 
 inventory_manager = InventoryManager()
 report_manager = Manager()
@@ -16,11 +17,13 @@ def signup_view(request):
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
-            user = form.save()
+            user = form.save(commit=False)
+            user.user_type = request.POST.get('user_type', 'staff')
             if user.user_type == 'supplier':
-                SupplierProfile.objects.create(user=user)
-            elif user.user_type == 'staff':
-                StaffProfile.objects.create(user=user)
+                user.contact = request.POST.get('contact', '')
+                user.phone = request.POST.get('phone', '')
+                user.address = request.POST.get('address', '')
+            user.save()
             login(request, user)
             messages.success(request, 'Account created successfully!')
             return redirect('dashboard')
@@ -50,10 +53,15 @@ def logout_view(request):
 
 @login_required
 def dashboard(request):
-    total_products = Produit.objects.count()
-    low_stock_count = Produit.objects.filter(quantity__lte=10).count()
-    total_value = sum(p.price * p.quantity for p in Produit.objects.all())
-    recent_transactions = Transaction.objects.all().order_by('-date')[:5]
+    if request.user.user_type == 'supplier':
+        products = Produit.objects.filter(supplier=request.user)
+    else:
+        products = Produit.objects.all()
+
+    total_products = products.count()
+    low_stock_count = products.filter(quantity__lte=10).count()
+    total_value = sum(p.price * p.quantity for p in products)
+    recent_transactions = Transaction.objects.filter(produit__in=products).order_by('-date')[:5]
 
     context = {
         'total_products': total_products,
@@ -65,7 +73,10 @@ def dashboard(request):
 
 @login_required
 def inventory(request):
-    products = inventory_manager.list_all_products()
+    if request.user.user_type == 'supplier':
+        products = inventory_manager.list_all_products().filter(supplier=request.user)
+    else:
+        products = inventory_manager.list_all_products()
     return render(request, 'inventory.html', {'products': products})
 
 @login_required
@@ -76,6 +87,7 @@ def add_product(request):
             'category': request.POST['category'],
             'price': float(request.POST['price']),
             'quantity': int(request.POST['quantity']),
+            'supplier': request.user if request.user.user_type == 'supplier' else None,
         }
         inventory_manager.add_product(data)
         messages.success(request, 'Product added successfully')
@@ -106,8 +118,12 @@ def delete_product(request, product_id):
 
 @login_required
 def transactions(request):
-    products = Produit.objects.all()
-    transactions = Transaction.objects.all().order_by('-date')
+    if request.user.user_type == 'supplier':
+        products = Produit.objects.filter(supplier=request.user)
+        transactions = Transaction.objects.filter(produit__in=products).order_by('-date')
+    else:
+        products = Produit.objects.all()
+        transactions = Transaction.objects.all().order_by('-date')
     return render(request, 'transactions.html', {
         'products': products,
         'transactions': transactions
@@ -155,6 +171,13 @@ def record_purchase(request):
 
 @login_required
 def reports(request):
+    if request.user.user_type == 'supplier':
+        products = Produit.objects.filter(supplier=request.user)
+        transactions = Transaction.objects.filter(produit__in=products)
+    else:
+        products = Produit.objects.all()
+        transactions = Transaction.objects.all()
+
     current_date = datetime.now()
     selected_month = int(request.GET.get('month', current_date.month))
     selected_year = int(request.GET.get('year', current_date.year))
@@ -190,7 +213,7 @@ def settings_view(request):
 
 @login_required
 def suppliers(request):
-    suppliers = SupplierProfile.objects.all()
+    suppliers = CustomUser.objects.filter(Q(user_type='supplier'))
     return render(request, 'suppliers.html', {'suppliers': suppliers})
 
 @login_required
@@ -220,6 +243,13 @@ def customers(request):
 
 @login_required
 def activity_log(request):
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        details = request.POST.get('details', '')
+        ActivityLog.objects.create(user=request.user, action=action, details=details)
+        messages.success(request, 'Activity logged successfully!')
+        return redirect('activity_log')
+
     logs = ActivityLog.objects.all().order_by('-timestamp')[:100]
     return render(request, 'activity_log.html', {'logs': logs})
 

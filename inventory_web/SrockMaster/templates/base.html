@@ -27,7 +27,7 @@
     <li><a href="{% url 'reports' %}" class="{% if 'reports' in request.path %}active{% endif %}">
         <span class="icon"><i class="fas fa-chart-line"></i></span>Reports</a></li>
 
-    {% if user.user_type != 'supplier' and user.user_type != 'staff' %}
+    {% if user.is_superuser and user.user_type == 'staff' %}
         <li><a href="{% url 'suppliers' %}" class="{% if 'suppliers' in request.path %}active{% endif %}">
             <span class="icon"><i class="fas fa-truck"></i></span>Suppliers</a></li>
 
@@ -55,9 +55,6 @@
         <li><a href="{% url 'login' %}"><span class="icon"><i class="fas fa-sign-in-alt"></i></span>Login</a></li>
     {% endif %}
 </ul>
-
-
-
         <div class="sidebar-footer">
             &copy; {{ now|date:"Y" }} StockPro. All rights reserved.
         </div>
