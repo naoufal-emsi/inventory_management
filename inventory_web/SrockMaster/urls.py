@@ -22,3 +22,7 @@ urlpatterns = [
     path('analytics/', views.analytics, name='analytics'),
     path('support/', views.support, name='support'),
 ]
+
+urlpatterns += [
+    path('supplier/<int:supplier_id>/products/', views.supplier_products, name='supplier_products'),
+]

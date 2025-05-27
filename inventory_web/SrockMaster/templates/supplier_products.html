@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block title %}Products of {{ supplier.company_name|default:supplier.username }}{% endblock %}
+{% block content %}
+<h1>Products of {{ supplier.company_name|default:supplier.username }}</h1>
+<div class="form-section">
+    {% if products %}
+    <table class="table">
+        <thead>
+            <tr><th>Name</th><th>Category</th><th>Price</th><th>Quantity</th><th>Action</th></tr>
+        </thead>
+        <tbody>
+            {% for product in products %}
+            <tr>
+                <td>{{ product.name }}</td>
+                <td>{{ product.category }}</td>
+                <td>{{ product.price }}</td>
+                <td>{{ product.quantity }}</td>
+                <td>
+                  <form method="post" style="display:inline;">
+                    {% csrf_token %}
+                    <input type="hidden" name="product_id" value="{{ product.id }}">
+                    <input type="number" name="buy_quantity" min="1" max="{{ product.quantity }}" value="1" required style="width:60px;">
+                    <button type="submit" name="buy" value="{{ product.id }}" class="btn btn-primary">Buy</button>
+                  </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>No products found for this supplier.</p>
+    {% endif %}
+    {% if messages %}
+      <ul class="messages">
+        {% for message in messages %}
+          <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+</div>
+{% endblock %}

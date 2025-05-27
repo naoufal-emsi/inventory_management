@@ -10,7 +10,9 @@
         <tbody>
             {% for supplier in suppliers %}
             <tr>
-                <td>{{ supplier.username }}</td>
+                <td>
+                    <a href="{% url 'supplier_products' supplier.id %}">{{ supplier.company_name|default:supplier.username }}</a>
+                </td>
                 <td>{{ supplier.contact }}</td>
                 <td>{{ supplier.email }}</td>
                 <td>{{ supplier.phone }}</td>

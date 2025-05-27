@@ -13,6 +13,7 @@ class CustomUser(AbstractUser):
     contact = models.CharField(max_length=100, blank=True, null=True)
     phone = models.CharField(max_length=20, blank=True, null=True)
     address = models.TextField(blank=True, null=True)
+    profile_pic = models.BinaryField(blank=True, null=True, editable=True)
     # You can add more fields if needed
 
 class Produit(models.Model):
@@ -129,3 +130,21 @@ class PurchaseForm(forms.ModelForm):
     class Meta:
         model = Purchase
         fields = ['customer', 'product', 'quantity', 'price']
+
+class ProfileUpdateForm(forms.ModelForm):
+    profile_pic = forms.ImageField(required=False)
+    password = forms.CharField(label='New Password', widget=forms.PasswordInput, required=False)
+    email = forms.EmailField(disabled=True)
+    class Meta:
+        model = CustomUser
+        fields = ['first_name', 'last_name', 'email', 'phone', 'address']
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        # Handle profile_pic as binary data
+        profile_pic_file = self.files.get('profile_pic')
+        if profile_pic_file:
+            user.profile_pic = profile_pic_file.read()
+        if commit:
+            user.save()
+        return user

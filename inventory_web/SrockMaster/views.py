@@ -1,14 +1,15 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout, authenticate
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib import messages
-from .models import Produit, Transaction, ActivityLog, CustomUser, SupplierProfile, StaffProfile, Customer, Purchase, CustomUserCreationForm, CustomerForm, PurchaseForm
+from .models import Produit, Transaction, ActivityLog, CustomUser, SupplierProfile, StaffProfile, Customer, Purchase, CustomUserCreationForm, CustomerForm, PurchaseForm, ProfileUpdateForm
 from .services.inventory_manager import InventoryManager
 from .services.manager import Manager
 from datetime import datetime
 import calendar
 from django.db.models import Q
+import base64
 
 inventory_manager = InventoryManager()
 report_manager = Manager()
@@ -205,7 +206,22 @@ def reports(request):
 
 @login_required
 def profile(request):
-    return render(request, 'profile.html', {'user': request.user})
+    user = request.user
+    profile_pic_b64 = None
+    if user.profile_pic:
+        profile_pic_b64 = base64.b64encode(user.profile_pic).decode('utf-8')
+    if request.method == 'POST':
+        form = ProfileUpdateForm(request.POST, request.FILES, instance=user)
+        if form.is_valid():
+            # No need to handle profile_pic here; handled in form.save()
+            if form.cleaned_data.get('password'):
+                user.set_password(form.cleaned_data['password'])
+            form.save()
+            messages.success(request, 'Profile updated successfully!')
+            return redirect('profile')
+    else:
+        form = ProfileUpdateForm(instance=user)
+    return render(request, 'profile.html', {'form': form, 'user': user, 'profile_pic_b64': profile_pic_b64})
 
 @login_required
 def settings_view(request):
@@ -265,3 +281,10 @@ def analytics(request):
 @login_required
 def support(request):
     return render(request, 'support.html')
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser or u.user_type == 'admin')
+def supplier_products(request, supplier_id):
+    supplier = get_object_or_404(CustomUser, id=supplier_id, user_type='supplier')
+    products = Produit.objects.filter(supplier=supplier)
+    return render(request, 'supplier_products.html', {'supplier': supplier, 'products': products})
