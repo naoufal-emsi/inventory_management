@@ -3,23 +3,23 @@
 {% block title %}Dashboard - Inventory Management{% endblock %}
 
 {% block content %}
-<h1>Dashboard</h1>
+<h1 style="text-align:center;margin-bottom:2rem;">Dashboard</h1>
 <div class="dashboard-stats">
-    <div class="stat-card">
-        <h3>Total Products</h3>
+    <div class="stat-card" style="border-left:6px solid #4f8ef7;">
+        <h3><i class="fas fa-box"></i> Total Products</h3>
         <p>{{ total_products }}</p>
     </div>
-    <div class="stat-card">
-        <h3>Low Stock Items</h3>
+    <div class="stat-card" style="border-left:6px solid #ef4444;">
+        <h3><i class="fas fa-exclamation-triangle"></i> Low Stock Items</h3>
         <p>{{ low_stock_count }}</p>
     </div>
-    <div class="stat-card">
-        <h3>Total Stock Value</h3>
+    <div class="stat-card" style="border-left:6px solid #22c55e;">
+        <h3><i class="fas fa-dollar-sign"></i> Total Stock Value</h3>
         <p>${{ total_value|floatformat:2 }}</p>
     </div>
 </div>
 
-<div class="recent-activities">
+<div class="recent-activities" style="margin-top:2rem;">
     <h2>Recent Transactions</h2>
     <table class="table">
         <thead>
@@ -36,10 +36,18 @@
             <tr>
                 <td>{{ transaction.date }}</td>
                 <td>{{ transaction.produit.name }}</td>
-                <td>{{ transaction.get_type_display }}</td>
+                <td>
+                    {% if transaction.type == 'sale' %}
+                        <span style="color:#22c55e;"><i class="fas fa-arrow-up"></i> {{ transaction.get_type_display }}</span>
+                    {% else %}
+                        <span style="color:#6366f1;"><i class="fas fa-arrow-down"></i> {{ transaction.get_type_display }}</span>
+                    {% endif %}
+                </td>
                 <td>{{ transaction.quantity }}</td>
                 <td>${{ transaction.price }}</td>
             </tr>
+            {% empty %}
+            <tr><td colspan="5" style="text-align:center;">No recent transactions.</td></tr>
             {% endfor %}
         </tbody>
     </table>

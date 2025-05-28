@@ -1,8 +1,8 @@
 {% extends 'base.html' %}
 {% block title %}Suppliers - StockPro{% endblock %}
 {% block content %}
-<h1>Suppliers</h1>
-<div class="form-section">
+<h1 style="text-align:center;margin-bottom:2rem;">Suppliers</h1>
+<div class="form-section" style="box-shadow:0 2px 8px rgba(99,102,241,0.07);">
     <table class="table">
         <thead>
             <tr><th>Name</th><th>Contact</th><th>Email</th><th>Phone</th><th>Address</th></tr>
@@ -11,13 +11,15 @@
             {% for supplier in suppliers %}
             <tr>
                 <td>
-                    <a href="{% url 'supplier_products' supplier.id %}">{{ supplier.company_name|default:supplier.username }}</a>
+                    <a href="{% url 'supplier_products' supplier.id %}" style="color:#6366f1;font-weight:500;">{{ supplier.company_name|default:supplier.username }}</a>
                 </td>
                 <td>{{ supplier.contact }}</td>
                 <td>{{ supplier.email }}</td>
                 <td>{{ supplier.phone }}</td>
                 <td>{{ supplier.address }}</td>
             </tr>
+            {% empty %}
+            <tr><td colspan="5" style="text-align:center;">No suppliers found.</td></tr>
             {% endfor %}
         </tbody>
     </table>

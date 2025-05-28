@@ -6,13 +6,12 @@
 <div class="auth-container">
     <div class="auth-box">
         <h2>Sign Up</h2>
+        <div style="background:#e0e7ff;color:#2563eb;padding:10px 15px;border-radius:6px;margin-bottom:1rem;text-align:center;">
+            Your username will be automatically generated from your email address.
+        </div>
         <form method="POST" action="{% url 'signup' %}">
             {% csrf_token %}
             {{ form.non_field_errors }}
-            <div class="form-group">
-                <label for="username">Username:</label>
-                {{ form.username }}
-            </div>
             <div class="form-group">
                 <label for="email">Email:</label>
                 {{ form.email }}
@@ -20,6 +19,22 @@
             <div class="form-group">
                 <label for="user_type">Account Type:</label>
                 {{ form.user_type }}
+            </div>
+            <div class="form-group">
+                <label for="first_name">First Name:</label>
+                {{ form.first_name }}
+            </div>
+            <div class="form-group">
+                <label for="last_name">Last Name:</label>
+                {{ form.last_name }}
+            </div>
+            <div class="form-group">
+                <label for="phone">Phone:</label>
+                {{ form.phone }}
+            </div>
+            <div class="form-group">
+                <label for="address">Address:</label>
+                {{ form.address }}
             </div>
             <div class="form-group">
                 <label for="password1">Password:</label>

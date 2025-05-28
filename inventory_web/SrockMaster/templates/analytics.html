@@ -1,13 +1,22 @@
 {% extends 'base.html' %}
 {% block title %}Analytics - StockPro{% endblock %}
 {% block content %}
-<h1>Analytics</h1>
-<div class="form-section">
-    <ul>
-        <li><strong>Total Users:</strong> {{ total_users }}</li>
-        <li><strong>Total Suppliers:</strong> {{ total_suppliers }}</li>
-        <li><strong>Total Customers:</strong> {{ total_customers }}</li>
-    </ul>
+<h1 style="text-align:center;margin-bottom:2rem;">Analytics</h1>
+<div class="dashboard-stats" style="margin-bottom:2rem;">
+    <div class="stat-card">
+        <h3>Total Users</h3>
+        <p>{{ total_users }}</p>
+    </div>
+    <div class="stat-card">
+        <h3>Total Suppliers</h3>
+        <p>{{ total_suppliers }}</p>
+    </div>
+    <div class="stat-card">
+        <h3>Total Customers</h3>
+        <p>{{ total_customers }}</p>
+    </div>
+</div>
+<div class="form-section" style="max-width:600px;margin:auto;box-shadow:0 2px 8px rgba(99,102,241,0.07);">
     <p>More analytics coming soon...</p>
 </div>
 {% endblock %}

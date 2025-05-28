@@ -1,8 +1,8 @@
 {% extends 'base.html' %}
 {% block title %}Products of {{ supplier.company_name|default:supplier.username }}{% endblock %}
 {% block content %}
-<h1>Products of {{ supplier.company_name|default:supplier.username }}</h1>
-<div class="form-section">
+<h1 style="text-align:center;margin-bottom:2rem;">Products of {{ supplier.company_name|default:supplier.username }}</h1>
+<div class="form-section" style="box-shadow:0 2px 8px rgba(99,102,241,0.07);">
     {% if products %}
     <table class="table">
         <thead>
@@ -13,7 +13,7 @@
             <tr>
                 <td>{{ product.name }}</td>
                 <td>{{ product.category }}</td>
-                <td>{{ product.price }}</td>
+                <td><span style="color:#6366f1;">${{ product.price }}</span></td>
                 <td>{{ product.quantity }}</td>
                 <td>
                   <form method="post" style="display:inline;">
@@ -28,7 +28,7 @@
         </tbody>
     </table>
     {% else %}
-    <p>No products found for this supplier.</p>
+    <p style="text-align:center;">No products found for this supplier.</p>
     {% endif %}
     {% if messages %}
       <ul class="messages">

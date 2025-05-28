@@ -82,10 +82,14 @@ class CustomUserCreationForm(forms.ModelForm):
         label='Account Type',
         widget=forms.Select
     )
+    first_name = forms.CharField(label='First Name', max_length=150, required=True)
+    last_name = forms.CharField(label='Last Name', max_length=150, required=True)
+    phone = forms.CharField(label='Phone', max_length=20, required=True)
+    address = forms.CharField(label='Address', widget=forms.Textarea, required=True)
 
     class Meta:
         model = CustomUser
-        fields = ('username', 'email', 'user_type')
+        fields = ('username', 'email', 'user_type', 'first_name', 'last_name', 'phone', 'address')
 
     def clean_password2(self):
         password1 = self.cleaned_data.get('password1')
@@ -97,6 +101,10 @@ class CustomUserCreationForm(forms.ModelForm):
     def save(self, commit=True):
         user = super().save(commit=False)
         user.set_password(self.cleaned_data['password1'])
+        user.first_name = self.cleaned_data['first_name']
+        user.last_name = self.cleaned_data['last_name']
+        user.phone = self.cleaned_data['phone']
+        user.address = self.cleaned_data['address']
         if commit:
             user.save()
         return user
@@ -129,7 +137,7 @@ class CustomerForm(forms.ModelForm):
 class PurchaseForm(forms.ModelForm):
     class Meta:
         model = Purchase
-        fields = ['customer', 'product', 'quantity']  # removed 'price'
+        fields = ['product', 'quantity']  # Do NOT include 'customer' here
 
 class ProfileUpdateForm(forms.ModelForm):
     profile_pic = forms.ImageField(required=False)

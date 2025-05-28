@@ -20,10 +20,7 @@ def signup_view(request):
         if form.is_valid():
             user = form.save(commit=False)
             user.user_type = request.POST.get('user_type', 'staff')
-            if user.user_type == 'supplier':
-                user.contact = request.POST.get('contact', '')
-                user.phone = request.POST.get('phone', '')
-                user.address = request.POST.get('address', '')
+            # phone/address/first_name/last_name are handled by the form
             user.save()
             login(request, user)
             messages.success(request, 'Account created successfully!')
@@ -257,8 +254,9 @@ def customers(request):
     else:
         customer_form = CustomerForm()
         purchase_form = PurchaseForm()
+    # Fetch all customers and all purchases for the tables
     customers = Customer.objects.all()
-    purchases = Purchase.objects.select_related('customer', 'product').all().order_by('-date')
+    purchases = Purchase.objects.select_related('customer', 'product', 'added_by').all().order_by('-date')
     return render(request, 'customers.html', {
         'customers': customers,
         'purchases': purchases,

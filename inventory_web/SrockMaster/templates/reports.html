@@ -3,11 +3,11 @@
 {% block title %}Reports - Inventory Management{% endblock %}
 
 {% block content %}
-<h1>Reports</h1>
+<h1 style="text-align:center;margin-bottom:2rem;">Reports</h1>
 
-<div class="report-section">
+<div class="report-section form-section" style="margin-bottom:2rem;box-shadow:0 2px 8px rgba(99,102,241,0.07);">
     <h2>Monthly Report</h2>
-    <form method="GET" action="{% url 'reports' %}" class="form-inline">
+    <form method="GET" action="{% url 'reports' %}" class="form-inline" style="margin-bottom:1rem;">
         <div class="form-group">
             <label for="month">Month:</label>
             <select id="month" name="month" class="form-control">
@@ -24,7 +24,7 @@
                 {% endfor %}
             </select>
         </div>
-        <button type="submit" class="btn">Generate Report</button>
+        <button type="submit" class="btn btn-success">Generate Report</button>
     </form>
 
     {% if monthly_report %}
@@ -48,7 +48,7 @@
     {% endif %}
 </div>
 
-<div class="report-section">
+<div class="report-section form-section" style="margin-bottom:2rem;box-shadow:0 2px 8px rgba(99,102,241,0.07);">
     <h2>Top Selling Products</h2>
     <table class="table">
         <thead>
@@ -67,19 +67,20 @@
                 <td>{{ product.total_sales }}</td>
                 <td>${{ product.revenue|floatformat:2 }}</td>
             </tr>
+            {% empty %}
+            <tr><td colspan="4" style="text-align:center;">No sales data.</td></tr>
             {% endfor %}
         </tbody>
     </table>
 </div>
 
-<div class="report-section">
+<div class="report-section form-section" style="margin-bottom:2rem;box-shadow:0 2px 8px rgba(99,102,241,0.07);">
     <h2>Low Stock Alert</h2>
     <table class="table">
         <thead>
             <tr>
                 <th>Product</th>
                 <th>Current Stock</th>
-                <th>Minimum Required</th>
                 <th>Status</th>
             </tr>
         </thead>
@@ -88,15 +89,12 @@
             <tr>
                 <td>{{ product.name }}</td>
                 <td>{{ product.quantity }}</td>
-                <td>{{ product.min_required }}</td>
                 <td>
-                    {% if product.quantity <= product.min_required %}
-                    <span class="alert">Restock Required</span>
-                    {% else %}
-                    <span class="good">OK</span>
-                    {% endif %}
+                    <span class="alert alert-danger">Restock Required</span>
                 </td>
             </tr>
+            {% empty %}
+            <tr><td colspan="3" style="text-align:center;">No low stock products.</td></tr>
             {% endfor %}
         </tbody>
     </table>
