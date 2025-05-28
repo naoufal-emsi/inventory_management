@@ -138,11 +138,12 @@ def record_sale(request):
         product = get_object_or_404(Produit, id=product_id)
         
         if product.quantity >= quantity:
+            unit_price = product.price
             Transaction.objects.create(
                 produit=product,
                 type='sale',
                 quantity=quantity,
-                price=product.price
+                price=unit_price
             )
             product.quantity -= quantity
             product.save()
@@ -156,14 +157,13 @@ def record_purchase(request):
     if request.method == 'POST':
         product_id = int(request.POST['product'])
         quantity = int(request.POST['quantity'])
-        price = float(request.POST['price'])
         product = get_object_or_404(Produit, id=product_id)
-        
+        unit_price = product.price
         Transaction.objects.create(
             produit=product,
             type='purchase',
             quantity=quantity,
-            price=price
+            price=unit_price
         )
         product.quantity += quantity
         product.save()
@@ -238,13 +238,22 @@ def customers(request):
         customer_form = CustomerForm(request.POST)
         purchase_form = PurchaseForm(request.POST)
         if customer_form.is_valid() and purchase_form.is_valid():
+            # Save customer first
             customer = customer_form.save()
+            # Prepare purchase but don't save yet
             purchase = purchase_form.save(commit=False)
             purchase.customer = customer
             purchase.added_by = request.user
-            purchase.save()
-            messages.success(request, 'Customer and purchase recorded!')
-            return redirect('customers')
+            purchase.price = purchase.product.price * purchase.quantity
+            product = purchase.product
+            if product.quantity >= purchase.quantity:
+                product.quantity -= purchase.quantity
+                product.save()
+                purchase.save()
+                messages.success(request, 'Customer and purchase recorded!')
+                return redirect('customers')
+            else:
+                messages.error(request, 'Insufficient stock for this purchase.')
     else:
         customer_form = CustomerForm()
         purchase_form = PurchaseForm()

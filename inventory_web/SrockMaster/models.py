@@ -129,7 +129,7 @@ class CustomerForm(forms.ModelForm):
 class PurchaseForm(forms.ModelForm):
     class Meta:
         model = Purchase
-        fields = ['customer', 'product', 'quantity', 'price']
+        fields = ['customer', 'product', 'quantity']  # removed 'price'
 
 class ProfileUpdateForm(forms.ModelForm):
     profile_pic = forms.ImageField(required=False)
