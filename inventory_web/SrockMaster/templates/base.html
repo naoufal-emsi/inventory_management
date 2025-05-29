@@ -11,8 +11,8 @@
 </head>
 <body>
     <nav class="sidebar">
-        <div class="sidebar-header">
-            <i class="fas fa-warehouse"></i> STOCKPRO
+        <div class="sidebar-header" style="padding-left:1rem;">
+            <i class="fas fa-warehouse"></i> STOCKMASTER
         </div>
        <ul>
     <li><a href="{% url 'dashboard' %}" class="{% if request.path == '/' %}active{% endif %}">
@@ -56,7 +56,7 @@
     {% endif %}
 </ul>
         <div class="sidebar-footer">
-            &copy; {{ now|date:"Y" }} StockPro. All rights reserved.
+            &copy; {{ now|date:"Y" }} StockMaster. All rights reserved.
         </div>
     </nav>
     <div class="container">

@@ -14,6 +14,7 @@ class CustomUser(AbstractUser):
     phone = models.CharField(max_length=20, blank=True, null=True)
     address = models.TextField(blank=True, null=True)
     profile_pic = models.BinaryField(blank=True, null=True, editable=True)
+    balance = models.DecimalField(max_digits=10, decimal_places=2, default=1000.00)
     # You can add more fields if needed
 
 class Produit(models.Model):
@@ -27,17 +28,30 @@ class Produit(models.Model):
     def __str__(self):
         return f"{self.name} ({self.category}) - {self.quantity} unités"
 
+class Customer(models.Model):
+    name = models.CharField(max_length=100)
+    email = models.EmailField(blank=True)
+    phone = models.CharField(max_length=20, blank=True)
+    address = models.TextField(blank=True)
+
+    def __str__(self):
+        return self.name
+
 class Transaction(models.Model):
     TYPE_CHOICES = [
         ('sale', 'Vente'),
         ('purchase', 'Achat'),
+        ('supplier_purchase', 'Supplier Purchase'),
     ]
 
     produit = models.ForeignKey(Produit, on_delete=models.CASCADE)
-    type = models.CharField(max_length=10, choices=TYPE_CHOICES)
+    type = models.CharField(max_length=20, choices=TYPE_CHOICES)  # Changed from 10 to 20
     quantity = models.PositiveIntegerField()
     price = models.FloatField()
     date = models.DateField(auto_now_add=True)
+    from_user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='transactions_from', null=True)
+    to_user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='transactions_to', null=True)
+    customer = models.ForeignKey(Customer, on_delete=models.SET_NULL, null=True, blank=True)  # Add this line
 
     def __str__(self):
         return f"{self.get_type_display()} de {self.quantity} x {self.produit.name}"
@@ -45,6 +59,52 @@ class Transaction(models.Model):
     @property
     def total(self):
         return self.price * self.quantity
+
+    def save(self, *args, **kwargs):
+        # Get old transaction if this is an update
+        if self.pk:
+            old_transaction = Transaction.objects.get(pk=self.pk)
+            # Reverse previous balance changes
+            self._update_balances(old_transaction, reverse=True)
+        
+        # Update balances based on transaction type
+        self._update_balances(self)
+        
+        # Update product quantity
+        if self.type == 'sale':
+            self.produit.quantity -= self.quantity
+        else:  # purchase or supplier_purchase
+            self.produit.quantity += self.quantity
+        self.produit.save()
+        
+        super().save(*args, **kwargs)
+
+    def _update_balances(self, transaction, reverse=False):
+        multiplier = -1 if reverse else 1
+        amount = transaction.total * multiplier
+
+        if transaction.type == 'sale':
+            # In a sale, from_user receives money, to_user pays
+            if transaction.from_user:
+                transaction.from_user.balance += amount
+                transaction.from_user.save()
+            if transaction.to_user:
+                transaction.to_user.balance -= amount
+                transaction.to_user.save()
+        
+        elif transaction.type in ['purchase', 'supplier_purchase']:
+            # In a purchase, to_user pays, from_user receives
+            if transaction.to_user:
+                transaction.to_user.balance -= amount
+                transaction.to_user.save()
+            if transaction.from_user:
+                transaction.from_user.balance += amount
+                transaction.from_user.save()
+
+    def delete(self, *args, **kwargs):
+        # Reverse balance changes before deletion
+        self._update_balances(self, reverse=True)
+        super().delete(*args, **kwargs)
 
 class SupplierProfile(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='supplier_profile')
@@ -109,15 +169,6 @@ class CustomUserCreationForm(forms.ModelForm):
             user.save()
         return user
 
-class Customer(models.Model):
-    name = models.CharField(max_length=100)
-    email = models.EmailField(blank=True)
-    phone = models.CharField(max_length=20, blank=True)
-    address = models.TextField(blank=True)
-
-    def __str__(self):
-        return self.name
-
 class Purchase(models.Model):
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name='purchases')
     product = models.ForeignKey(Produit, on_delete=models.CASCADE)
@@ -140,19 +191,26 @@ class PurchaseForm(forms.ModelForm):
         fields = ['product', 'quantity']  # Do NOT include 'customer' here
 
 class ProfileUpdateForm(forms.ModelForm):
-    profile_pic = forms.ImageField(required=False)
-    password = forms.CharField(label='New Password', widget=forms.PasswordInput, required=False)
-    email = forms.EmailField(disabled=True)
+    profile_pic = forms.ImageField(required=False, widget=forms.FileInput(attrs={
+        'accept': 'image/*',
+        'class': 'hidden-input'
+    }))
+    password = forms.CharField(widget=forms.PasswordInput, required=False)
+    
     class Meta:
         model = CustomUser
-        fields = ['first_name', 'last_name', 'email', 'phone', 'address']
+        fields = ['first_name', 'last_name', 'email', 'phone', 'address', 'profile_pic']
 
     def save(self, commit=True):
         user = super().save(commit=False)
-        # Handle profile_pic as binary data
-        profile_pic_file = self.files.get('profile_pic')
-        if profile_pic_file:
-            user.profile_pic = profile_pic_file.read()
+        if self.cleaned_data.get('password'):
+            user.set_password(self.cleaned_data['password'])
+        
+        # Handle profile picture
+        if 'profile_pic' in self.files:
+            file_data = self.files['profile_pic'].read()
+            user.profile_pic = file_data
+        
         if commit:
             user.save()
         return user

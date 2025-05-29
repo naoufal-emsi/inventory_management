@@ -336,6 +336,67 @@ body {
     box-shadow: 0 4px 24px rgba(99,102,241,0.13);
 }
 
+/* Global hover color modifications */
+a:hover {
+    color: #4f8ef7 !important;
+}
+
+.btn:hover {
+    background: #4f8ef7 !important;
+    border-color: #4f8ef7 !important;
+}
+
+.table tr:hover {
+    background: rgba(79, 142, 247, 0.1) !important;
+}
+
+.nav-link:hover,
+.sidebar ul li a:hover {
+    color: #4f8ef7 !important;
+}
+
+.stat-card:hover {
+    box-shadow: 0 4px 24px rgba(79, 142, 247, 0.15) !important;
+}
+
+.form-control:focus,
+.input-group input:focus,
+.input-group select:focus,
+.input-group textarea:focus {
+    border-color: #4f8ef7 !important;
+    box-shadow: 0 0 0 4px rgba(79, 142, 247, 0.1) !important;
+}
+
+.btn-submit:hover,
+.btn-primary:hover,
+.modern-btn:hover {
+    background: #4f8ef7 !important;
+}
+
+.input-group input:focus ~ .floating-label,
+.input-group select:focus ~ .floating-label,
+.input-group textarea:focus ~ .floating-label {
+    color: #4f8ef7 !important;
+}
+
+.auth-links a:hover {
+    color: #4f8ef7 !important;
+}
+
+/* Additional interactive elements */
+.search-container input:focus {
+    border-color: #4f8ef7 !important;
+    box-shadow: 0 0 0 4px rgba(79, 142, 247, 0.1) !important;
+}
+
+.upload-button:hover {
+    background: #4f8ef7 !important;
+}
+
+.btn-toggle:hover {
+    background: #4f8ef7 !important;
+}
+
 /* Responsive */
 @media (max-width: 800px) {
     .container {

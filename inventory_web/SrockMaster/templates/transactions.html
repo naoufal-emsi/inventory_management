@@ -22,6 +22,17 @@
                 <label for="sale_quantity">Quantity:</label>
                 <input type="number" id="sale_quantity" name="quantity" class="form-control" required>
             </div>
+            {% if user.user_type != 'supplier' %}
+            <div class="form-group">
+                <label for="customer">Customer (Optional):</label>
+                <select id="customer" name="customer" class="form-control">
+                    <option value="">-- Select Customer --</option>
+                    {% for customer in customers %}
+                    <option value="{{ customer.id }}">{{ customer.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
             <button type="submit" class="btn btn-success" style="width:100%;">Record Sale</button>
         </form>
     </div>
@@ -60,6 +71,7 @@
             <th>Quantity</th>
             <th>Price</th>
             <th>Total</th>
+            <th>Customer</th>
         </tr>
     </thead>
     <tbody>
@@ -77,9 +89,16 @@
             <td>{{ transaction.quantity }}</td>
             <td>${{ transaction.price }}</td>
             <td>${{ transaction.total|floatformat:2 }}</td>
+            <td>
+                {% if transaction.customer %}
+                    {{ transaction.customer.name }}
+                {% else %}
+                    -
+                {% endif %}
+            </td>
         </tr>
         {% empty %}
-        <tr><td colspan="6" style="text-align:center;">No transactions yet.</td></tr>
+        <tr><td colspan="7" style="text-align:center;">No transactions yet.</td></tr>
         {% endfor %}
     </tbody>
 </table>

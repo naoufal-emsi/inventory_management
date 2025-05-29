@@ -20,6 +20,7 @@ urlpatterns = [
     path('customers/', views.customers, name='customers'),
     path('activity-log/', views.activity_log, name='activity_log'),
     path('analytics/', views.analytics, name='analytics'),
+    path('analytics/users/<str:user_type>/', views.user_details, name='user_details'),
     path('support/', views.support, name='support'),
 ]
 

@@ -1,67 +1,268 @@
 {% extends 'base.html' %}
 {% block title %}Profile - StockPro{% endblock %}
 {% block content %}
-<h1>Profile</h1>
-<div class="form-section" style="max-width:500px;margin:auto;">
-    <form method="POST" enctype="multipart/form-data">
-        {% csrf_token %}
-        <div style="text-align:center;">
-            {% if profile_pic_b64 %}
-                <img id="profile-pic-preview" src="data:image/png;base64,{{ profile_pic_b64 }}" alt="Profile Picture" style="width:120px;height:120px;object-fit:cover;border-radius:50%;border:2px solid #ccc;display:block;margin:auto;">
-            {% else %}
-                <img id="profile-pic-preview" src="https://ui-avatars.com/api/?name={{ user.username }}" alt="Profile Picture" style="width:120px;height:120px;object-fit:cover;border-radius:50%;border:2px solid #ccc;display:block;margin:auto;">
-            {% endif %}
+<div class="profile-container">
+    <div class="profile-header">
+        <h1>Profile Settings</h1>
+        <p class="subtitle">Manage your personal information and preferences</p>
+    </div>
+
+    <div class="profile-content">
+        <div class="profile-card">
+            <form method="POST" enctype="multipart/form-data" class="profile-form">
+                {% csrf_token %}
+                <div class="form-grid">
+                    <div class="form-column">
+                        <h3>Account Information</h3>
+                        
+                        <div class="input-group">
+                            <div class="input-icon"><i class="fas fa-user"></i></div>
+                            <input type="text" value="{{ user.username }}" readonly class="form-control readonly">
+                            <label class="floating-label">Username</label>
+                        </div>
+
+                        <div class="input-group">
+                            <div class="input-icon"><i class="fas fa-envelope"></i></div>
+                            {{ form.email }}
+                            <label class="floating-label">Email Address</label>
+                        </div>
+
+                        <div class="input-group">
+                            <div class="input-icon"><i class="fas fa-lock"></i></div>
+                            {{ form.password }}
+                            <label class="floating-label">New Password</label>
+                        </div>
+                    </div>
+
+                    <div class="form-column">
+                        <h3>Personal Information</h3>
+                        
+                        <div class="input-group">
+                            <div class="input-icon"><i class="fas fa-user"></i></div>
+                            {{ form.first_name }}
+                            <label class="floating-label">First Name</label>
+                        </div>
+
+                        <div class="input-group">
+                            <div class="input-icon"><i class="fas fa-user"></i></div>
+                            {{ form.last_name }}
+                            <label class="floating-label">Last Name</label>
+                        </div>
+
+                        <div class="input-group">
+                            <div class="input-icon"><i class="fas fa-phone"></i></div>
+                            {{ form.phone }}
+                            <label class="floating-label">Phone Number</label>
+                        </div>
+
+                        <div class="input-group">
+                            <div class="input-icon"><i class="fas fa-map-marker-alt"></i></div>
+                            {{ form.address }}
+                            <label class="floating-label">Address</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn-submit">
+                        <i class="fas fa-save"></i> Save Changes
+                    </button>
+                </div>
+            </form>
         </div>
-        <div class="form-group">
-            <label for="profile_pic">Change Profile Image:</label>
-            {{ form.profile_pic }}
-        </div>
-        <div class="form-group">
-            <label for="username">Username:</label>
-            <input type="text" id="username" value="{{ user.username }}" readonly class="form-control">
-        </div>
-        <div class="form-group">
-            <label for="email">Email:</label>
-            {{ form.email }}
-        </div>
-        <div class="form-group">
-            <label for="first_name">First Name:</label>
-            {{ form.first_name }}
-        </div>
-        <div class="form-group">
-            <label for="last_name">Last Name:</label>
-            {{ form.last_name }}
-        </div>
-        <div class="form-group">
-            <label for="phone">Phone Number:</label>
-            {{ form.phone }}
-        </div>
-        <div class="form-group">
-            <label for="address">Address:</label>
-            {{ form.address }}
-        </div>
-        <div class="form-group">
-            <label for="password">Change Password:</label>
-            {{ form.password }}
-        </div>
-        <button type="submit" class="btn btn-success">Save Changes</button>
-    </form>
+    </div>
 </div>
+
+<style>
+.profile-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.profile-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.profile-header h1 {
+    font-size: 2.5rem;
+    color: #1f2937;
+    margin-bottom: 0.5rem;
+}
+
+.subtitle {
+    color: #6b7280;
+    font-size: 1.1rem;
+}
+
+.profile-card {
+    background: white;
+    border-radius: 15px;
+    padding: 2rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.profile-image-section {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+#profile-pic-preview {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid #e5e7eb;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    margin-bottom: 1rem;
+}
+
+.image-upload {
+    position: relative;
+    margin-top: 1rem;
+}
+
+.upload-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    background: #6366f1;
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.upload-button:hover {
+    background: #4f46e5;
+}
+
+input[type="file"] {
+    display: none;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+}
+
+.form-column h3 {
+    color: #1f2937;
+    font-size: 1.25rem;
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+}
+
+.input-group {
+    position: relative;
+    margin-bottom: 1.5rem;
+}
+
+.input-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6b7280;
+    z-index: 1;
+}
+
+.form-control, .input-group input, .input-group textarea {
+    width: 100%;
+    padding: 0.75rem 1rem 0.75rem 2.5rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    background: #f9fafb;
+}
+
+.readonly {
+    background: #f3f4f6;
+    cursor: not-allowed;
+}
+
+.form-control:focus, .input-group input:focus, .input-group textarea:focus {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 4px rgba(99,102,241,0.1);
+    outline: none;
+}
+
+.floating-label {
+    position: absolute;
+    left: 2.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6b7280;
+    transition: all 0.3s ease;
+    pointer-events: none;
+}
+
+.input-group input:focus ~ .floating-label,
+.input-group input:not(:placeholder-shown) ~ .floating-label {
+    top: -0.5rem;
+    left: 1rem;
+    font-size: 0.75rem;
+    color: #6366f1;
+    background: white;
+    padding: 0 0.5rem;
+}
+
+.form-actions {
+    text-align: center;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+.btn-submit {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 2rem;
+    background: #6366f1;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-submit:hover {
+    background: #4f46e5;
+    transform: translateY(-1px);
+}
+
+@media (max-width: 768px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const input = document.querySelector('input[name="profile_pic"]');
-        const preview = document.getElementById('profile-pic-preview');
-        if (input) {
-            input.addEventListener('change', function(e) {
-                if (input.files && input.files[0]) {
-                    const reader = new FileReader();
-                    reader.onload = function(ev) {
-                        preview.src = ev.target.result;
-                    }
-                    reader.readAsDataURL(input.files[0]);
+document.addEventListener('DOMContentLoaded', function() {
+    const input = document.querySelector('input[name="profile_pic"]');
+    const preview = document.getElementById('profile-pic-preview');
+    
+    if (input) {
+        input.addEventListener('change', function(e) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(ev) {
+                    preview.src = ev.target.result;
                 }
-            });
-        }
-    });
+                reader.readAsDataURL(input.files[0]);
+            }
+        });
+    }
+});
 </script>
 {% endblock %}

@@ -2,11 +2,16 @@
 {% block title %}Products of {{ supplier.company_name|default:supplier.username }}{% endblock %}
 {% block content %}
 <h1 style="text-align:center;margin-bottom:2rem;">Products of {{ supplier.company_name|default:supplier.username }}</h1>
+
+<div class="balance-info" style="margin-bottom:2rem;">
+    <p>Your Balance: ${{ user.balance|floatformat:2 }}</p>
+</div>
+
 <div class="form-section" style="box-shadow:0 2px 8px rgba(99,102,241,0.07);">
     {% if products %}
     <table class="table">
         <thead>
-            <tr><th>Name</th><th>Category</th><th>Price</th><th>Quantity</th><th>Action</th></tr>
+            <tr><th>Name</th><th>Category</th><th>Price</th><th>Available Quantity</th><th>Action</th></tr>
         </thead>
         <tbody>
             {% for product in products %}
@@ -16,12 +21,12 @@
                 <td><span style="color:#6366f1;">${{ product.price }}</span></td>
                 <td>{{ product.quantity }}</td>
                 <td>
-                  <form method="post" style="display:inline;">
-                    {% csrf_token %}
-                    <input type="hidden" name="product_id" value="{{ product.id }}">
-                    <input type="number" name="buy_quantity" min="1" max="{{ product.quantity }}" value="1" required style="width:60px;">
-                    <button type="submit" name="buy" value="{{ product.id }}" class="btn btn-primary">Buy</button>
-                  </form>
+                    <form method="post" style="display:inline;">
+                        {% csrf_token %}
+                        <input type="hidden" name="product_id" value="{{ product.id }}">
+                        <input type="number" name="buy_quantity" min="1" max="{{ product.quantity }}" value="1" required style="width:60px;">
+                        <button type="submit" class="btn btn-primary">Buy</button>
+                    </form>
                 </td>
             </tr>
             {% endfor %}
@@ -29,13 +34,6 @@
     </table>
     {% else %}
     <p style="text-align:center;">No products found for this supplier.</p>
-    {% endif %}
-    {% if messages %}
-      <ul class="messages">
-        {% for message in messages %}
-          <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-        {% endfor %}
-      </ul>
     {% endif %}
 </div>
 {% endblock %}

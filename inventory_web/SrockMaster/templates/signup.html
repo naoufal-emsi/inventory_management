@@ -1,54 +1,291 @@
 {% extends 'base.html' %}
 
-{% block title %}Sign Up - Inventory Management{% endblock %}
+{% block title %}Sign Up - StockMaster{% endblock %}
 
 {% block content %}
-<div class="auth-container">
-    <div class="auth-box">
-        <h2>Sign Up</h2>
-        <div style="background:#e0e7ff;color:#2563eb;padding:10px 15px;border-radius:6px;margin-bottom:1rem;text-align:center;">
-            Your username will be automatically generated from your email address.
+<div class="modern-signup-container">
+    <div class="modern-signup-card">
+        <!-- Header Section -->
+        <div class="modern-signup-header">
+            <div class="brand-icon">
+                <i class="fas fa-warehouse"></i>
+            </div>
+            <h1>Create Account</h1>
+            <p class="subtitle">Join StockMaster to manage your inventory efficiently</p>
         </div>
-        <form method="POST" action="{% url 'signup' %}">
+
+        <!-- Form Section -->
+        <form method="POST" action="{% url 'signup' %}" class="modern-form" id="signupForm">
             {% csrf_token %}
-            {{ form.non_field_errors }}
-            <div class="form-group">
-                <label for="email">Email:</label>
-                {{ form.email }}
+            
+            <!-- Account Section -->
+            <div class="form-section">
+                <div class="section-header">
+                    <span class="section-number">1</span>
+                    <h3>Account Information</h3>
+                </div>
+                
+                <div class="form-row">
+                    <div class="modern-input-group">
+                        <div class="input-icon"><i class="fas fa-user"></i></div>
+                        <input type="text" name="username" required>
+                        <label>Username</label>
+                    </div>
+
+                    <div class="modern-input-group">
+                        <div class="input-icon"><i class="fas fa-envelope"></i></div>
+                        <input type="email" name="email" required>
+                        <label>Email Address</label>
+                    </div>
+                </div>
+
+                <div class="modern-input-group">
+                    <div class="input-icon"><i class="fas fa-user-tag"></i></div>
+                    <select name="user_type" required>
+                        <option value="">Select Account Type</option>
+                        <option value="staff">Staff Member</option>
+                        <option value="supplier">Supplier</option>
+                    </select>
+                </div>
             </div>
-            <div class="form-group">
-                <label for="user_type">Account Type:</label>
-                {{ form.user_type }}
+
+            <!-- Security Section -->
+            <div class="form-section">
+                <div class="section-header">
+                    <span class="section-number">2</span>
+                    <h3>Security</h3>
+                </div>
+                
+                <div class="form-row">
+                    <div class="modern-input-group">
+                        <div class="input-icon"><i class="fas fa-lock"></i></div>
+                        <input type="password" name="password1" required>
+                        <label>Password</label>
+                    </div>
+
+                    <div class="modern-input-group">
+                        <div class="input-icon"><i class="fas fa-lock"></i></div>
+                        <input type="password" name="password2" required>
+                        <label>Confirm Password</label>
+                    </div>
+                </div>
             </div>
-            <div class="form-group">
-                <label for="first_name">First Name:</label>
-                {{ form.first_name }}
+
+            <!-- Personal Info Section -->
+            <div class="form-section">
+                <div class="section-header">
+                    <span class="section-number">3</span>
+                    <h3>Personal Information</h3>
+                </div>
+                
+                <div class="form-row">
+                    <div class="modern-input-group">
+                        <div class="input-icon"><i class="fas fa-user"></i></div>
+                        <input type="text" name="first_name" required>
+                        <label>First Name</label>
+                    </div>
+
+                    <div class="modern-input-group">
+                        <div class="input-icon"><i class="fas fa-user"></i></div>
+                        <input type="text" name="last_name" required>
+                        <label>Last Name</label>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="modern-input-group">
+                        <div class="input-icon"><i class="fas fa-phone"></i></div>
+                        <input type="tel" name="phone" required>
+                        <label>Phone Number</label>
+                    </div>
+
+                    <div class="modern-input-group">
+                        <div class="input-icon"><i class="fas fa-map-marker-alt"></i></div>
+                        <textarea name="address" required></textarea>
+                        <label>Address</label>
+                    </div>
+                </div>
             </div>
-            <div class="form-group">
-                <label for="last_name">Last Name:</label>
-                {{ form.last_name }}
+
+            <!-- Submit Section -->
+            <div class="form-actions">
+                <button type="submit" class="modern-submit-btn">
+                    Create Account <i class="fas fa-arrow-right"></i>
+                </button>
+                <p class="login-link">
+                    Already have an account? <a href="{% url 'login' %}">Sign in</a>
+                </p>
             </div>
-            <div class="form-group">
-                <label for="phone">Phone:</label>
-                {{ form.phone }}
-            </div>
-            <div class="form-group">
-                <label for="address">Address:</label>
-                {{ form.address }}
-            </div>
-            <div class="form-group">
-                <label for="password1">Password:</label>
-                {{ form.password1 }}
-            </div>
-            <div class="form-group">
-                <label for="password2">Confirm Password:</label>
-                {{ form.password2 }}
-            </div>
-            <button type="submit" class="btn btn-success">Sign Up</button>
         </form>
-        <p class="auth-links">
-            Already have an account? <a href="{% url 'login' %}">Login</a>
-        </p>
     </div>
 </div>
+
+<style>
+.modern-signup-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    background: linear-gradient(135deg, #f4f4f6 0%, #e0e7ff 100%);
+}
+
+.modern-signup-card {
+    background: white;
+    border-radius: 20px;
+    padding: 3rem;
+    width: 100%;
+    max-width: 800px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+}
+
+.modern-signup-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.brand-icon {
+    width: 80px;
+    height: 80px;
+    background: #6366f1;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem auto;
+}
+
+.brand-icon i {
+    font-size: 2.5rem;
+    color: white;
+}
+
+.modern-signup-header h1 {
+    font-size: 2.5rem;
+    color: #1f2937;
+    margin-bottom: 0.75rem;
+}
+
+.subtitle {
+    color: #6b7280;
+    font-size: 1.1rem;
+}
+
+.form-section {
+    margin-bottom: 2.5rem;
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.section-number {
+    width: 28px;
+    height: 28px;
+    background: #6366f1;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.modern-input-group {
+    position: relative;
+    margin-bottom: 1rem;
+}
+
+.modern-input-group input,
+.modern-input-group select,
+.modern-input-group textarea {
+    width: 100%;
+    padding: 1rem 1rem 1rem 3rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    font-size: 1rem;
+    transition: all 0.3s;
+    background: #f9fafb;
+}
+
+.modern-input-group input:focus,
+.modern-input-group select:focus,
+.modern-input-group textarea:focus {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 4px rgba(99,102,241,0.1);
+    outline: none;
+}
+
+.input-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6b7280;
+    transition: all 0.3s;
+}
+
+.modern-input-group input:focus ~ .input-icon,
+.modern-input-group select:focus ~ .input-icon {
+    color: #6366f1;
+}
+
+.modern-submit-btn {
+    width: 100%;
+    padding: 1rem;
+    background: #6366f1;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.modern-submit-btn:hover {
+    background: #4f46e5;
+    transform: translateY(-2px);
+}
+
+.login-link {
+    text-align: center;
+    margin-top: 1.5rem;
+    color: #6b7280;
+}
+
+.login-link a {
+    color: #6366f1;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.login-link a:hover {
+    text-decoration: underline;
+}
+
+@media (max-width: 640px) {
+    .modern-signup-card {
+        padding: 2rem;
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
 {% endblock %}

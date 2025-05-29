@@ -1,95 +1,498 @@
 {% extends 'base.html' %}
 {% block title %}Customers - StockPro{% endblock %}
 {% block content %}
-<h1 style="text-align:center;margin-bottom:2rem;">Customers</h1>
-<div class="dashboard-stats" style="margin-bottom:2rem;">
-    <div class="stat-card">
-        <h3>Total Customers</h3>
-        <p>{{ customers|length }}</p>
+<div class="customers-container">
+    <!-- Header Section -->
+    <div class="page-header">
+        <h1>Customer Management</h1>
+        <p class="subtitle">Manage customers and track their purchases</p>
     </div>
-    <div class="stat-card">
-        <h3>Total Purchases</h3>
-        <p>{{ purchases|length }}</p>
+
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+        <div class="stat-card" style="background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);">
+            <div class="stat-icon">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-details">
+                <h3>Total Customers</h3>
+                <p class="stat-number">{{ customers|length }}</p>
+            </div>
+        </div>
+
+        <div class="stat-card" style="background: linear-gradient(135deg, #22c55e 0%, #15803d 100%);">
+            <div class="stat-icon">
+                <i class="fas fa-shopping-cart"></i>
+            </div>
+            <div class="stat-details">
+                <h3>Total Purchases</h3>
+                <p class="stat-number">{{ purchases|length }}</p>
+            </div>
+        </div>
     </div>
-</div>
-<div class="form-section" style="margin-bottom:2rem;">
-    <h2 style="margin-bottom:1rem;">Add Customer & Purchase</h2>
-    <form method="POST" style="max-width:500px;margin:auto;">
-        {% csrf_token %}
-        <div class="form-group">
-            {{ customer_form.name.label_tag }}
-            {{ customer_form.name }}
+
+    <!-- Add Customer Section -->
+    <div class="content-section">
+        <div class="section-header">
+            <h2><i class="fas fa-user-plus"></i> Add New Customer</h2>
+            <button class="btn-toggle modern-btn" onclick="toggleForm()">
+                <i class="fas fa-plus"></i> New Customer
+            </button>
         </div>
-        <div class="form-group">
-            {{ customer_form.email.label_tag }}
-            {{ customer_form.email }}
+        
+        <div id="customerForm" class="form-container modern-form-container" style="display: none;">
+            <form method="POST" class="modern-form">
+                {% csrf_token %}
+                <div class="form-grid">
+                    <div class="form-column">
+                        <h3 class="form-section-title">Customer Information</h3>
+                        <div class="input-group">
+                            <div class="input-icon">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            {{ customer_form.name }}
+                            <label class="floating-label">Full Name</label>
+                        </div>
+                        <div class="input-group">
+                            <div class="input-icon">
+                                <i class="fas fa-envelope"></i>
+                            </div>
+                            {{ customer_form.email }}
+                            <label class="floating-label">Email Address</label>
+                        </div>
+                        <div class="input-group">
+                            <div class="input-icon">
+                                <i class="fas fa-phone"></i>
+                            </div>
+                            {{ customer_form.phone }}
+                            <label class="floating-label">Phone Number</label>
+                        </div>
+                        <div class="input-group">
+                            <div class="input-icon">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </div>
+                            {{ customer_form.address }}
+                            <label class="floating-label">Address</label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-column">
+                        <h3 class="form-section-title">Initial Purchase</h3>
+                        <div class="input-group">
+                            <div class="input-icon">
+                                <i class="fas fa-box"></i>
+                            </div>
+                            {{ purchase_form.product }}
+                            <label class="floating-label">Select Product</label>
+                        </div>
+                        <div class="input-group">
+                            <div class="input-icon">
+                                <i class="fas fa-sort-amount-up"></i>
+                            </div>
+                            {{ purchase_form.quantity }}
+                            <label class="floating-label">Quantity</label>
+                        </div>
+                        <div class="info-box">
+                            <i class="fas fa-info-circle"></i>
+                            <span>Price will be calculated automatically based on the selected product and quantity.</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-cancel" onclick="toggleForm()">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                    <button type="submit" class="btn-submit">
+                        <i class="fas fa-save"></i> Create Customer
+                    </button>
+                </div>
+            </form>
         </div>
-        <div class="form-group">
-            {{ customer_form.phone.label_tag }}
-            {{ customer_form.phone }}
+    </div>
+
+    <!-- Customer List Section -->
+    <div class="content-section">
+        <div class="section-header">
+            <h2><i class="fas fa-address-book"></i> Customer Directory</h2>
+            <div class="search-container">
+                <input type="text" id="customerSearch" onkeyup="searchCustomers()" placeholder="Search customers...">
+                <i class="fas fa-search search-icon"></i>
+            </div>
         </div>
-        <div class="form-group">
-            {{ customer_form.address.label_tag }}
-            {{ customer_form.address }}
+        
+        <div class="table-container">
+            <table class="table" id="customersTable">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Address</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for customer in customers %}
+                    <tr>
+                        <td>
+                            <div class="customer-name">
+                                <i class="fas fa-user-circle"></i>
+                                {{ customer.name }}
+                            </div>
+                        </td>
+                        <td>{{ customer.email }}</td>
+                        <td>{{ customer.phone }}</td>
+                        <td>{{ customer.address }}</td>
+                        <td>
+                            <span class="badge badge-active">Active</span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5" class="empty-state">No customers yet</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
-        <div class="form-group">
-            {{ purchase_form.product.label_tag }}
-            {{ purchase_form.product }}
+    </div>
+
+    <!-- Purchase History Section -->
+    <div class="content-section">
+        <div class="section-header">
+            <h2><i class="fas fa-history"></i> Purchase History</h2>
         </div>
-        <div class="form-group">
-            {{ purchase_form.quantity.label_tag }}
-            {{ purchase_form.quantity }}
+        
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Customer</th>
+                        <th>Product</th>
+                        <th>Quantity</th>
+                        <th>Price</th>
+                        <th>Added By</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for purchase in purchases %}
+                    <tr>
+                        <td>{{ purchase.date|date:"Y-m-d H:i" }}</td>
+                        <td>{{ purchase.customer.name }}</td>
+                        <td>{{ purchase.product.name }}</td>
+                        <td>{{ purchase.quantity }}</td>
+                        <td>${{ purchase.price }}</td>
+                        <td>{{ purchase.added_by.username }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6" class="empty-state">No purchase history</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
-        <div class="form-group">
-            <small style="color:#6366f1;">Price will be calculated automatically.</small>
-        </div>
-        <button type="submit" class="btn btn-success" style="width:100%;">Add Customer & Purchase</button>
-    </form>
+    </div>
 </div>
 
-<div class="dashboard-stats" style="margin-bottom:2rem;">
-    <div class="form-section" style="width:100%;">
-        <h2>Customer List</h2>
-        <table class="table">
-            <thead>
-                <tr><th>Name</th><th>Email</th><th>Phone</th><th>Address</th></tr>
-            </thead>
-            <tbody>
-                {% for customer in customers %}
-                <tr>
-                    <td>{{ customer.name }}</td>
-                    <td>{{ customer.email }}</td>
-                    <td>{{ customer.phone }}</td>
-                    <td>{{ customer.address }}</td>
-                </tr>
-                {% empty %}
-                <tr><td colspan="4" style="text-align:center;">No customers yet.</td></tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</div>
+<style>
+.customers-container {
+    padding: 20px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
 
-<div class="form-section" style="margin-bottom:2rem;">
-    <h2>Purchase History</h2>
-    <table class="table">
-        <thead>
-            <tr><th>Date</th><th>Customer</th><th>Product</th><th>Quantity</th><th>Price</th><th>Added By</th></tr>
-        </thead>
-        <tbody>
-            {% for purchase in purchases %}
-            <tr>
-                <td>{{ purchase.date|date:"Y-m-d H:i" }}</td>
-                <td>{{ purchase.customer.name }}</td>
-                <td>{{ purchase.product.name }}</td>
-                <td>{{ purchase.quantity }}</td>
-                <td><span style="color:#22c55e;">${{ purchase.price }}</span></td>
-                <td>{{ purchase.added_by.username }}</td>
-            </tr>
-            {% empty %}
-            <tr><td colspan="6" style="text-align:center;">No purchases yet.</td></tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
+.page-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.page-header h1 {
+    font-size: 2.5rem;
+    color: #1f2937;
+    margin-bottom: 0.5rem;
+}
+
+.subtitle {
+    color: #6b7280;
+    font-size: 1.1rem;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    padding: 1.5rem;
+    border-radius: 12px;
+    color: white;
+    display: flex;
+    align-items: center;
+    transition: transform 0.2s;
+}
+
+.stat-icon {
+    font-size: 2.5rem;
+    margin-right: 1rem;
+}
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin: 0.5rem 0;
+}
+
+.content-section {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-bottom: 1rem;
+}
+
+.form-note {
+    color: #6366f1;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+}
+
+.customer-name {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.badge-active {
+    background: #10b981;
+    color: white;
+}
+
+.empty-state {
+    text-align: center;
+    color: #6b7280;
+    padding: 2rem !important;
+}
+
+.search-container {
+    position: relative;
+    width: 300px;
+}
+
+.search-container input {
+    width: 100%;
+    padding: 0.5rem 1rem 0.5rem 2.5rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+}
+
+.search-icon {
+    position: absolute;
+    left: 0.8rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6b7280;
+}
+
+.modern-form-container {
+    background: white;
+    border-radius: 15px;
+    padding: 2rem;
+    box-shadow: 0 8px 24px rgba(149,157,165,0.1);
+    transition: all 0.3s ease;
+}
+
+.modern-form {
+    width: 100%;
+}
+
+.form-section-title {
+    color: #1f2937;
+    font-size: 1.25rem;
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+}
+
+.input-group {
+    position: relative;
+    margin-bottom: 1.5rem;
+}
+
+.input-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6b7280;
+    z-index: 1;
+}
+
+.input-group input,
+.input-group select,
+.input-group textarea {
+    width: 100%;
+    padding: 0.75rem 1rem 0.75rem 2.5rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    background: #f9fafb;
+}
+
+.input-group input:focus,
+.input-group select:focus,
+.input-group textarea:focus {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 4px rgba(99,102,241,0.1);
+    outline: none;
+}
+
+.floating-label {
+    position: absolute;
+    left: 2.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6b7280;
+    transition: all 0.3s ease;
+    pointer-events: none;
+}
+
+.input-group input:focus ~ .floating-label,
+.input-group input:not(:placeholder-shown) ~ .floating-label {
+    top: -0.5rem;
+    left: 1rem;
+    font-size: 0.75rem;
+    color: #6366f1;
+    background: white;
+    padding: 0 0.5rem;
+}
+
+.info-box {
+    background: #f3f4f6;
+    padding: 1rem;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: #6b7280;
+    font-size: 0.9rem;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+.btn-cancel {
+    padding: 0.75rem 1.5rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    background: white;
+    color: #6b7280;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-submit {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 6px;
+    background: #6366f1;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-cancel:hover {
+    background: #f3f4f6;
+}
+
+.btn-submit:hover {
+    background: #4f46e5;
+}
+
+.modern-btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 6px;
+    background: #6366f1;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.modern-btn:hover {
+    background: #4f46e5;
+    transform: translateY(-1px);
+}
+
+@media (max-width: 768px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .section-header {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .search-container {
+        width: 100%;
+    }
+}
+</style>
+
+<script>
+function toggleForm() {
+    const form = document.getElementById('customerForm');
+    form.style.display = form.style.display === 'none' ? 'block' : 'none';
+}
+
+function searchCustomers() {
+    const input = document.getElementById('customerSearch');
+    const filter = input.value.toLowerCase();
+    const table = document.getElementById('customersTable');
+    const tr = table.getElementsByTagName('tr');
+
+    for (let i = 1; i < tr.length; i++) {
+        const td = tr[i].getElementsByTagName('td');
+        let found = false;
+        for (let j = 0; j < td.length; j++) {
+            const cell = td[j];
+            if (cell.textContent.toLowerCase().indexOf(filter) > -1) {
+                found = true;
+                break;
+            }
+        }
+        tr[i].style.display = found ? '' : 'none';
+    }
+}
+</script>
 {% endblock %}

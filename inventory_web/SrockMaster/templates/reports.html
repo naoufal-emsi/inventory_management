@@ -24,28 +24,61 @@
                 {% endfor %}
             </select>
         </div>
-        <button type="submit" class="btn btn-success">Generate Report</button>
+        <input type="hidden" name="format" value="csv">
+        <button type="submit" class="btn btn-primary" style="margin-left:10px;">
+            <i class="fas fa-download"></i> Generate & Export Report
+        </button>
     </form>
+</div>
 
-    {% if monthly_report %}
-    <div class="report-results">
-        <h3>Results for {{ monthly_report.month_name }} {{ monthly_report.year }}</h3>
-        <table class="table">
+<div class="report-section form-section" style="margin-bottom:2rem;">
+    <h3>Category Performance</h3>
+    <table class="table">
+        <thead>
             <tr>
+                <th>Category</th>
                 <th>Revenue</th>
-                <td>${{ monthly_report.revenue|floatformat:2 }}</td>
-            </tr>
-            <tr>
                 <th>Expenses</th>
-                <td>${{ monthly_report.expenses|floatformat:2 }}</td>
-            </tr>
-            <tr>
                 <th>Profit</th>
-                <td>${{ monthly_report.profit|floatformat:2 }}</td>
+                <th>Units Sold</th>
             </tr>
-        </table>
-    </div>
-    {% endif %}
+        </thead>
+        <tbody>
+            {% for category, metrics in financial_metrics.category_performance.items %}
+            <tr>
+                <td>{{ category }}</td>
+                <td>${{ metrics.revenue|floatformat:2 }}</td>
+                <td>${{ metrics.expenses|floatformat:2 }}</td>
+                <td>${{ metrics.profit|floatformat:2 }}</td>
+                <td>{{ metrics.units_sold }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="report-section form-section" style="margin-bottom:2rem;">
+    <h3>Year-over-Year Comparison</h3>
+    <table class="table">
+        <tr>
+            <th>Metric</th>
+            <th>{{ selected_year }}</th>
+            <th>{{ selected_year|add:"-1" }}</th>
+            <th>Growth</th>
+        </tr>
+        <tr>
+            <td>Revenue</td>
+            <td>${{ yearly_comparison.current_year.summary.total_revenue|floatformat:2 }}</td>
+            <td>${{ yearly_comparison.previous_year.summary.total_revenue|floatformat:2 }}</td>
+            <td>{{ yearly_comparison.growth.revenue|floatformat:1 }}%</td>
+        </tr>
+        <tr>
+            <td>Profit</td>
+            <td>${{ yearly_comparison.current_year.summary.gross_profit|floatformat:2 }}</td>
+            <td>${{ yearly_comparison.previous_year.summary.gross_profit|floatformat:2 }}</td>
+            <td>{{ yearly_comparison.growth.profit|floatformat:1 }}%</td>
+        </tr>
+    </table>
 </div>
 
 <div class="report-section form-section" style="margin-bottom:2rem;box-shadow:0 2px 8px rgba(99,102,241,0.07);">
