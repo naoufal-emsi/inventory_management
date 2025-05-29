@@ -11,50 +11,53 @@
 </head>
 <body>
     <nav class="sidebar">
-        <div class="sidebar-header" style="padding-left:1rem;">
-            <i class="fas fa-warehouse"></i> STOCKMASTER
+        <div class="sidebar-header">
+            <span class="logo-text"><i class="fas fa-warehouse"></i> STOCKMASTER</span>
+            <button id="sidebarToggle" class="sidebar-toggle">
+                <i class="fas fa-bars"></i>
+            </button>
         </div>
-       <ul>
-    <li><a href="{% url 'dashboard' %}" class="{% if request.path == '/' %}active{% endif %}">
-        <span class="icon"><i class="fas fa-tachometer-alt"></i></span>Dashboard</a></li>
+        <ul>
+            <li><a href="{% url 'dashboard' %}" class="{% if request.path == '/' %}active{% endif %}">
+                <span class="icon"><i class="fas fa-tachometer-alt"></i></span><span class="text">Dashboard</span></a></li>
 
-    <li><a href="{% url 'inventory' %}" class="{% if 'inventory' in request.path %}active{% endif %}">
-        <span class="icon"><i class="fas fa-boxes"></i></span>Inventory</a></li>
+            <li><a href="{% url 'inventory' %}" class="{% if 'inventory' in request.path %}active{% endif %}">
+                <span class="icon"><i class="fas fa-boxes"></i></span><span class="text">Inventory</span></a></li>
 
-    <li><a href="{% url 'transactions' %}" class="{% if 'transactions' in request.path %}active{% endif %}">
-        <span class="icon"><i class="fas fa-exchange-alt"></i></span>Transactions</a></li>
+            <li><a href="{% url 'transactions' %}" class="{% if 'transactions' in request.path %}active{% endif %}">
+                <span class="icon"><i class="fas fa-exchange-alt"></i></span><span class="text">Transactions</span></a></li>
 
-    <li><a href="{% url 'reports' %}" class="{% if 'reports' in request.path %}active{% endif %}">
-        <span class="icon"><i class="fas fa-chart-line"></i></span>Reports</a></li>
+            <li><a href="{% url 'reports' %}" class="{% if 'reports' in request.path %}active{% endif %}">
+                <span class="icon"><i class="fas fa-chart-line"></i></span><span class="text">Reports</span></a></li>
 
-    {% if user.is_superuser and user.user_type == 'staff' %}
-        <li><a href="{% url 'suppliers' %}" class="{% if 'suppliers' in request.path %}active{% endif %}">
-            <span class="icon"><i class="fas fa-truck"></i></span>Suppliers</a></li>
+            {% if user.is_superuser and user.user_type == 'staff' %}
+                <li><a href="{% url 'suppliers' %}" class="{% if 'suppliers' in request.path %}active{% endif %}">
+                    <span class="icon"><i class="fas fa-truck"></i></span><span class="text">Suppliers</span></a></li>
 
-        <li><a href="{% url 'activity_log' %}" class="{% if 'activity-log' in request.path %}active{% endif %}">
-            <span class="icon"><i class="fas fa-history"></i></span>Activity Log</a></li>
+                <li><a href="{% url 'activity_log' %}" class="{% if 'activity-log' in request.path %}active{% endif %}">
+                    <span class="icon"><i class="fas fa-history"></i></span><span class="text">Activity Log</span></a></li>
 
-        <li><a href="{% url 'analytics' %}" class="{% if 'analytics' in request.path %}active{% endif %}">
-            <span class="icon"><i class="fas fa-chart-pie"></i></span>Analytics</a></li>
-    {% endif %}
+                <li><a href="{% url 'analytics' %}" class="{% if 'analytics' in request.path %}active{% endif %}">
+                    <span class="icon"><i class="fas fa-chart-pie"></i></span><span class="text">Analytics</span></a></li>
+            {% endif %}
 
-    {% if user.user_type != 'supplier' %}
-        <li><a href="{% url 'customers' %}" class="{% if 'customers' in request.path %}active{% endif %}">
-            <span class="icon"><i class="fas fa-users"></i></span>Customers</a></li>
-    {% endif %}
+            {% if user.user_type != 'supplier' %}
+                <li><a href="{% url 'customers' %}" class="{% if 'customers' in request.path %}active{% endif %}">
+                    <span class="icon"><i class="fas fa-users"></i></span><span class="text">Customers</span></a></li>
+            {% endif %}
 
-    <li><a href="{% url 'profile' %}" class="{% if 'profile' in request.path %}active{% endif %}">
-        <span class="icon"><i class="fas fa-user"></i></span>Profile</a></li>
+            <li><a href="{% url 'profile' %}" class="{% if 'profile' in request.path %}active{% endif %}">
+                <span class="icon"><i class="fas fa-user"></i></span><span class="text">Profile</span></a></li>
 
-    <li><a href="{% url 'support' %}" class="{% if 'support' in request.path %}active{% endif %}">
-        <span class="icon"><i class="fas fa-headset"></i></span>Support</a></li>
+            <li><a href="{% url 'support' %}" class="{% if 'support' in request.path %}active{% endif %}">
+                <span class="icon"><i class="fas fa-headset"></i></span><span class="text">Support</span></a></li>
 
-    {% if user.is_authenticated %}
-        <li><a href="{% url 'logout' %}"><span class="icon"><i class="fas fa-sign-out-alt"></i></span>Logout</a></li>
-    {% else %}
-        <li><a href="{% url 'login' %}"><span class="icon"><i class="fas fa-sign-in-alt"></i></span>Login</a></li>
-    {% endif %}
-</ul>
+            {% if user.is_authenticated %}
+                <li><a href="{% url 'logout' %}"><span class="icon"><i class="fas fa-sign-out-alt"></i></span><span class="text">Logout</span></a></li>
+            {% else %}
+                <li><a href="{% url 'login' %}"><span class="icon"><i class="fas fa-sign-in-alt"></i></span><span class="text">Login</span></a></li>
+            {% endif %}
+        </ul>
         <div class="sidebar-footer">
             &copy; {{ now|date:"Y" }} StockMaster. All rights reserved.
         </div>

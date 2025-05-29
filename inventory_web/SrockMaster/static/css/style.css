@@ -125,6 +125,62 @@ body {
     overflow-y: auto;
 }
 
+/* Sidebar toggle button */
+.sidebar-toggle {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: #4f8ef7;
+    cursor: pointer;
+    padding: 5px;
+    font-size: 1.2rem;
+}
+
+.sidebar-header {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+/* Collapsed sidebar styles */
+.sidebar.collapsed {
+    width: 60px;
+}
+
+.sidebar.collapsed .text,
+.sidebar.collapsed .sidebar-footer,
+.sidebar.collapsed .logo-text {
+    display: none;
+}
+
+.sidebar.collapsed .sidebar-header {
+    padding: 2rem 0.5rem 1rem 0.5rem;
+}
+
+.sidebar.collapsed ul li a {
+    padding: 1rem;
+    justify-content: center;
+}
+
+.sidebar.collapsed .icon {
+    margin-right: 0;
+}
+
+/* Adjust main content when sidebar is collapsed */
+body.sidebar-collapsed {
+    margin-left: 60px;
+}
+
+/* Transition effects */
+.sidebar,
+.sidebar ul li a,
+body {
+    transition: all 0.3s ease;
+}
+
 /* Main content shift */
 body {
     margin-left: 220px;

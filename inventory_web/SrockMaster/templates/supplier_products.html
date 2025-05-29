@@ -3,10 +3,6 @@
 {% block content %}
 <h1 style="text-align:center;margin-bottom:2rem;">Products of {{ supplier.company_name|default:supplier.username }}</h1>
 
-<div class="balance-info" style="margin-bottom:2rem;">
-    <p>Your Balance: ${{ user.balance|floatformat:2 }}</p>
-</div>
-
 <div class="form-section" style="box-shadow:0 2px 8px rgba(99,102,241,0.07);">
     {% if products %}
     <table class="table">
