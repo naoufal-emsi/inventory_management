@@ -44,7 +44,7 @@
                         </div>
                         
                         <!-- Balance Display -->
-                        {% if user.user_type != 'staff' %}
+                        {% if user.user_type != 'staff' or user.is_superuser %}
                         <div class="balance-display">
                             <h3>Current Balance</h3>
                             <div class="balance-amount">
