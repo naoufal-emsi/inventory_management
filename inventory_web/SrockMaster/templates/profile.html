@@ -11,6 +11,16 @@
         <div class="profile-card">
             <form method="POST" enctype="multipart/form-data" class="profile-form">
                 {% csrf_token %}
+                <div class="profile-image-section">
+                    <img id="profile-pic-preview" src="{% if profile_pic_b64 %}data:image/jpeg;base64,{{ profile_pic_b64 }}{% else %}https://via.placeholder.com/150?text=No+Image{% endif %}" alt="Profile Picture">
+                    <div class="image-upload">
+                        <label for="profile-pic-input" class="upload-button">
+                            <i class="fas fa-camera"></i> Change Profile Picture
+                        </label>
+                        {{ form.profile_pic }}
+                    </div>
+                </div>
+
                 <div class="form-grid">
                     <div class="form-column">
                         <h3>Account Information</h3>
@@ -32,6 +42,25 @@
                             {{ form.password }}
                             <label class="floating-label">New Password</label>
                         </div>
+                        
+                        <!-- Balance Display -->
+                        {% if user.user_type != 'staff' %}
+                        <div class="balance-display">
+                            <h3>Current Balance</h3>
+                            <div class="balance-amount">
+                                <i class="fas fa-wallet"></i>
+                                <span>${{ user.balance|floatformat:2 }}</span>
+                            </div>
+                            <div class="balance-actions">
+                                <button type="button" class="btn-add-funds" data-toggle="modal" data-target="#addFundsModal">
+                                    <i class="fas fa-plus-circle"></i> Add Funds
+                                </button>
+                                <button type="button" class="btn-set-balance" data-toggle="modal" data-target="#setBalanceModal">
+                                    <i class="fas fa-edit"></i> Set Balance
+                                </button>
+                            </div>
+                        </div>
+                        {% endif %}
                     </div>
 
                     <div class="form-column">
@@ -101,6 +130,80 @@
     border-radius: 15px;
     padding: 2rem;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Balance Display Styles */
+.balance-display {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background: #f8fafc;
+    border-radius: 10px;
+    border-left: 6px solid #22c55e;
+}
+
+.balance-display h3 {
+    margin-bottom: 1rem;
+    color: #1f2937;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.balance-amount {
+    display: flex;
+    align-items: center;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #22c55e;
+    margin-bottom: 1rem;
+}
+
+.balance-amount i {
+    margin-right: 0.75rem;
+}
+
+.btn-add-funds {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: #22c55e;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-add-funds:hover {
+    background: #16a34a;
+    transform: translateY(-1px);
+}
+
+.balance-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.btn-set-balance {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: #6366f1;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-set-balance:hover {
+    background: #4f46e5;
+    transform: translateY(-1px);
 }
 
 .profile-image-section {
@@ -240,6 +343,64 @@ input[type="file"] {
     transform: translateY(-1px);
 }
 
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.4);
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 10% auto;
+    padding: 0;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    width: 500px;
+    max-width: 90%;
+    animation: modalFadeIn 0.3s;
+}
+
+.modal-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: #1f2937;
+}
+
+.close-modal {
+    color: #6b7280;
+    font-size: 1.75rem;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close-modal:hover {
+    color: #1f2937;
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+@keyframes modalFadeIn {
+    from {opacity: 0; transform: translateY(-20px);}
+    to {opacity: 1; transform: translateY(0);}
+}
+
 @media (max-width: 768px) {
     .form-grid {
         grid-template-columns: 1fr;
@@ -247,12 +408,60 @@ input[type="file"] {
 }
 </style>
 
+<!-- Add Funds Modal -->
+<div class="modal" id="addFundsModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Add Funds to Your Account</h2>
+            <span class="close-modal">&times;</span>
+        </div>
+        <div class="modal-body">
+            <form id="addFundsForm" action="{% url 'add_funds' %}" method="POST">
+                {% csrf_token %}
+                <div class="input-group">
+                    <div class="input-icon"><i class="fas fa-dollar-sign"></i></div>
+                    <input type="number" name="amount" min="0.01" step="0.01" required class="form-control">
+                    <label class="floating-label">Amount ($)</label>
+                </div>
+                <button type="submit" class="btn-submit">
+                    <i class="fas fa-plus-circle"></i> Add Funds
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Set Balance Modal -->
+<div class="modal" id="setBalanceModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Set Account Balance</h2>
+            <span class="close-modal">&times;</span>
+        </div>
+        <div class="modal-body">
+            <form id="setBalanceForm" action="{% url 'set_balance' %}" method="POST">
+                {% csrf_token %}
+                <div class="input-group">
+                    <div class="input-icon"><i class="fas fa-dollar-sign"></i></div>
+                    <input type="number" name="balance" min="0" step="0.01" required class="form-control" value="{{ user.balance }}">
+                    <label class="floating-label">Balance ($)</label>
+                </div>
+                <p class="note">Note: Balance must be a positive value.</p>
+                <button type="submit" class="btn-submit">
+                    <i class="fas fa-save"></i> Set Balance
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const input = document.querySelector('input[name="profile_pic"]');
     const preview = document.getElementById('profile-pic-preview');
     
     if (input) {
+        input.id = 'profile-pic-input';
         input.addEventListener('change', function(e) {
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
@@ -263,6 +472,41 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+    
+    // Modal functionality
+    const addFundsModal = document.getElementById('addFundsModal');
+    const setBalanceModal = document.getElementById('setBalanceModal');
+    const addFundsBtn = document.querySelector('.btn-add-funds');
+    const setBalanceBtn = document.querySelector('.btn-set-balance');
+    const closeBtns = document.querySelectorAll('.close-modal');
+    
+    if (addFundsBtn && addFundsModal) {
+        addFundsBtn.addEventListener('click', function() {
+            addFundsModal.style.display = 'block';
+        });
+    }
+    
+    if (setBalanceBtn && setBalanceModal) {
+        setBalanceBtn.addEventListener('click', function() {
+            setBalanceModal.style.display = 'block';
+        });
+    }
+    
+    closeBtns.forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            addFundsModal.style.display = 'none';
+            setBalanceModal.style.display = 'none';
+        });
+    });
+    
+    window.addEventListener('click', function(event) {
+        if (event.target == addFundsModal) {
+            addFundsModal.style.display = 'none';
+        }
+        if (event.target == setBalanceModal) {
+            setBalanceModal.style.display = 'none';
+        }
+    });
 });
 </script>
 {% endblock %}

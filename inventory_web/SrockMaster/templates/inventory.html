@@ -5,61 +5,6 @@
 {% block content %}
 <h1 style="text-align:center;margin-bottom:2rem;">Inventory Management</h1>
 
-<div class="search-box">
-    <input type="text" id="searchInput" onkeyup="searchProducts()" placeholder="Search products..." style="margin-bottom:1rem;">
-</div>
-
-<table id="productsTable" class="table">
-    <thead>
-        <tr>
-            <th>#</th>
-            <th>Name</th>
-            <th>Category</th>
-            <th>Price</th>
-            <th>Quantity</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for product in products %}
-        <tr {% if product.quantity <= 10 %}style="background:#f8d7da;"{% endif %}>
-            <td>{{ forloop.counter }}</td>
-            <td>{{ product.name }}</td>
-            <td>{{ product.category }}</td>
-            <td><span style="color:#6366f1;">${{ product.price }}</span></td>
-            <td>
-                {% if product.quantity <= 10 %}
-                    <span style="color:#ef4444;font-weight:bold;">{{ product.quantity }}</span>
-                {% else %}
-                    {{ product.quantity }}
-                {% endif %}
-            </td>
-            <td>
-                {% if user.user_type != 'supplier' or product.supplier == user %}
-                <a href="{% url 'edit_product' product.id %}" class="btn">Edit</a>
-                <form id="delete-form-{{ product.id }}" style="display: inline;" method="POST" action="{% url 'delete_product' product.id %}">
-                    {% csrf_token %}
-                    <button type="button" class="btn btn-danger" onclick="confirmDelete({{ product.id }}, '{{ product.name }}')">Delete</button>
-                </form>
-                {% endif %}
-            </td>
-        </tr>
-        {% empty %}
-        <tr><td colspan="6" style="text-align:center;">No products in inventory.</td></tr>
-        {% endfor %}
-    </tbody>
-</table>
-
-<!-- Modal for delete confirmation -->
-<div id="deleteModal" class="modal">
-    <div class="modal-content">
-        <h3>Confirm Delete</h3>
-        <p id="deleteModalText"></p>
-        <button id="confirmDeleteBtn" class="btn btn-danger">Delete</button>
-        <button onclick="closeModal()" class="btn">Cancel</button>
-    </div>
-</div>
-
 <h2 style="margin-top:2rem;">Add New Product</h2>
 <form method="POST" action="{% url 'add_product' %}" onsubmit="return validateForm()" style="max-width:500px;margin:auto;">
     {% csrf_token %}
@@ -81,7 +26,71 @@
     </div>
     <button type="submit" class="btn btn-success" style="width:100%;">Add Product</button>
 </form>
-{% endblock %}
+
+<div class="search-box" style="margin-top:2rem;">
+    <input type="text" id="searchInput" onkeyup="searchProducts()" placeholder="Search products..." style="margin-bottom:1rem;">
+</div>
+
+{% if user.user_type == 'admin' or user.is_superuser %}
+<h2 style="margin-top:2rem;">My Products</h2>
+{% endif %}
+
+<table id="productsTable" class="table">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>Category</th>
+            <th>Price</th>
+            <th>Quantity</th>
+            {% if user.user_type == 'staff' %}
+            <th>Supplier</th>
+            {% endif %}
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for product in products %}
+        <tr {% if product.quantity <= 10 %}style="background:#f8d7da;"{% endif %}>
+            <td>{{ forloop.counter }}</td>
+            <td>{{ product.name }}</td>
+            <td>{{ product.category }}</td>
+            <td><span style="color:#6366f1;">${{ product.price }}</span></td>
+            <td>
+                {% if product.quantity <= 10 %}
+                    <span style="color:#ef4444;font-weight:bold;">{{ product.quantity }}</span>
+                {% else %}
+                    {{ product.quantity }}
+                {% endif %}
+            </td>
+            {% if user.user_type == 'staff' %}
+            <td>{{ product.supplier.username|default:"Admin" }}</td>
+            {% endif %}
+            <td>
+                {% if user.user_type != 'supplier' or product.supplier == user %}
+                <a href="{% url 'edit_product' product.id %}" class="btn">Edit</a>
+                <form id="delete-form-{{ product.id }}" style="display: inline;" method="POST" action="{% url 'delete_product' product.id %}">
+                    {% csrf_token %}
+                    <button type="button" class="btn btn-danger" onclick="confirmDelete({{ product.id }}, '{{ product.name }}')">Delete</button>
+                </form>
+                {% endif %}
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="{% if user.user_type == 'staff' %}7{% else %}6{% endif %}" style="text-align:center;">No products in inventory.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- Modal for delete confirmation -->
+<div id="deleteModal" class="modal">
+    <div class="modal-content">
+        <h3>Confirm Delete</h3>
+        <p id="deleteModalText"></p>
+        <button id="confirmDeleteBtn" class="btn btn-danger">Delete</button>
+        <button onclick="closeModal()" class="btn">Cancel</button>
+    </div>
+</div>
 
 <script>
     function confirmDelete(productId, productName) {
@@ -97,7 +106,23 @@
     }
 
     function searchProducts() {
-        // Implement search functionality
+        const input = document.getElementById('searchInput');
+        const filter = input.value.toUpperCase();
+        
+        // Search in products table
+        const table = document.getElementById('productsTable');
+        const rows = table.getElementsByTagName('tr');
+        for (let i = 1; i < rows.length; i++) { // Start from 1 to skip header
+            const nameCell = rows[i].getElementsByTagName('td')[1]; // Name is in the second column
+            if (nameCell) {
+                const txtValue = nameCell.textContent || nameCell.innerText;
+                if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                    rows[i].style.display = '';
+                } else {
+                    rows[i].style.display = 'none';
+                }
+            }
+        }
     }
 
     function validateForm() {
@@ -230,3 +255,4 @@
         border-radius: 4px;
     }
 </style>
+{% endblock %}

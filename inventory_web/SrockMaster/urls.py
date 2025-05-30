@@ -26,4 +26,6 @@ urlpatterns = [
 
 urlpatterns += [
     path('supplier/<int:supplier_id>/products/', views.supplier_products, name='supplier_products'),
+    path('add-funds/', views.add_funds, name='add_funds'),
+    path('set-balance/', views.set_balance, name='set_balance'),
 ]

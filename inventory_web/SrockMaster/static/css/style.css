@@ -72,6 +72,7 @@ body {
     flex-direction: column;
     z-index: 100;
     overflow-y: auto;
+    overflow-x: hidden;
     scrollbar-width: thin;
     scrollbar-color: #4f8ef7 #1a1d23;
 }
@@ -82,6 +83,7 @@ body {
     letter-spacing: 2px;
     color: #4f8ef7;
     border-bottom: 1px solid #222;
+    white-space: nowrap;
 }
 .sidebar ul {
     list-style: none;

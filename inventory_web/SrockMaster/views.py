@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib import messages
 from django.db.models import Sum, F  # Add these imports
-from .models import Produit, Transaction, ActivityLog, CustomUser, SupplierProfile, StaffProfile, Customer, Purchase, CustomUserCreationForm, CustomerForm, PurchaseForm, ProfileUpdateForm
+from .models import Produit, Transaction, ActivityLog, CustomUser, SupplierProfile, StaffProfile, Customer, Purchase, CustomUserCreationForm, CustomerForm, PurchaseForm, ProfileUpdateForm, SupportTicket, TicketResponse, SupportTicketForm, TicketResponseForm
 from .services.inventory_manager import InventoryManager
 from .services.manager import Manager
 from datetime import datetime
@@ -90,21 +90,34 @@ def dashboard(request):
     low_stock_count = products.filter(quantity__lte=10).count()
     total_value = sum(p.price * p.quantity for p in products)
     recent_transactions = Transaction.objects.filter(produit__in=products).order_by('-date')[:5]
+    
+    # Get recent balance transactions
+    balance_transactions = ActivityLog.objects.filter(
+        user=request.user,
+        action__contains='balance'
+    ).order_by('-timestamp')[:5]
 
     context = {
         'total_products': total_products,
         'low_stock_count': low_stock_count,
         'total_value': total_value,
         'recent_transactions': recent_transactions,
+        'balance_transactions': balance_transactions,
     }
     return render(request, 'dashboard.html', context)
 
 @login_required
 def inventory(request):
     if request.user.user_type == 'supplier':
+        # Supplier only sees their own products
         products = inventory_manager.list_all_products().filter(supplier=request.user)
+    elif request.user.user_type == 'admin' or request.user.is_superuser:
+        # Admin only sees their own products (products with no supplier)
+        products = inventory_manager.list_all_products().filter(supplier=None)
     else:
+        # Staff sees all products
         products = inventory_manager.list_all_products()
+    
     return render(request, 'inventory.html', {'products': products})
 
 @login_required
@@ -257,11 +270,26 @@ def reports(request):
     )
 
     # Get top selling products for this supplier only
-    top_selling = products.annotate(
-        total_sales=Sum('transaction__quantity', filter=Q(transaction__type='sale')),
-        revenue=Sum(F('transaction__quantity') * F('transaction__price'), 
-                   filter=Q(transaction__type='sale'))
-    ).filter(total_sales__gt=0).order_by('-total_sales')[:5]
+    top_selling = report_manager.get_top_selling_products(
+        n=5, 
+        supplier=request.user if request.user.user_type == 'supplier' else None
+    )
+
+    # Get most profitable products
+    most_profitable = report_manager.get_most_profitable_products(
+        n=5,
+        supplier=request.user if request.user.user_type == 'supplier' else None
+    )
+
+    # Get inventory health metrics
+    inventory_health = report_manager.get_inventory_health(
+        supplier=request.user if request.user.user_type == 'supplier' else None
+    )
+
+    # Get customer insights
+    customer_insights = report_manager.get_customer_insights(
+        supplier=request.user if request.user.user_type == 'supplier' else None
+    )
 
     # Get low stock products for this supplier only
     low_stock = products.filter(quantity__lte=10)
@@ -272,7 +300,30 @@ def reports(request):
         
         writer = csv.writer(response)
         writer.writerow(['Report Period', f'{calendar.month_name[selected_month]} {selected_year}'])
+        writer.writerow(['Generated for', f'{request.user.get_full_name() or request.user.username} ({request.user.user_type})'])
         writer.writerow([])  # Empty row for spacing
+        
+        # Write summary
+        writer.writerow(['Financial Summary'])
+        writer.writerow(['Metric', 'Value'])
+        writer.writerow(['Total Revenue', f"${financial_metrics['summary']['total_revenue']:.2f}"])
+        writer.writerow(['Total Expenses', f"${financial_metrics['summary']['total_expenses']:.2f}"])
+        writer.writerow(['Gross Profit', f"${financial_metrics['summary']['gross_profit']:.2f}"])
+        writer.writerow(['Profit Margin', f"{financial_metrics['summary']['profit_margin']:.2f}%"])
+        writer.writerow(['Units Sold', financial_metrics['summary']['units_sold']])
+        writer.writerow(['Daily Average Revenue', f"${financial_metrics['summary']['daily_avg_revenue']:.2f}"])
+        writer.writerow([])
+        
+        # Write inventory summary
+        writer.writerow(['Inventory Summary'])
+        writer.writerow(['Metric', 'Value'])
+        writer.writerow(['Total Inventory Value', f"${financial_metrics['inventory']['total_value']:.2f}"])
+        writer.writerow(['Total Items in Stock', financial_metrics['inventory']['total_items']])
+        writer.writerow(['Average Product Price', f"${financial_metrics['inventory']['avg_price']:.2f}"])
+        writer.writerow(['Low Stock Items', inventory_health['low_stock_count']])
+        writer.writerow(['Out of Stock Items', inventory_health['out_of_stock_count']])
+        writer.writerow(['Inventory Turnover', f"{inventory_health['inventory_turnover']:.2f}"])
+        writer.writerow([])
         
         # Write expense breakdown
         writer.writerow(['Expense Breakdown'])
@@ -283,14 +334,15 @@ def reports(request):
         
         # Write category performance
         writer.writerow(['Category Performance'])
-        writer.writerow(['Category', 'Revenue', 'Expenses', 'Profit', 'Units Sold'])
+        writer.writerow(['Category', 'Revenue', 'Expenses', 'Profit', 'Units Sold', 'Inventory Value'])
         for category, metrics in financial_metrics['category_performance'].items():
             writer.writerow([
                 category,
                 f"${metrics['revenue']:.2f}",
                 f"${metrics['expenses']:.2f}",
                 f"${metrics['profit']:.2f}",
-                metrics['units_sold']
+                metrics['units_sold'],
+                f"${metrics['inventory_value']:.2f}"
             ])
         writer.writerow([])
         
@@ -309,6 +361,12 @@ def reports(request):
             f"${yearly_comparison['previous_year']['summary']['gross_profit']:.2f}",
             f"{yearly_comparison['growth']['profit']:.1f}%"
         ])
+        writer.writerow([
+            'Inventory Value',
+            f"${yearly_comparison['current_year']['inventory']['total_value']:.2f}",
+            f"${yearly_comparison['previous_year']['inventory']['total_value']:.2f}",
+            f"{yearly_comparison['growth']['inventory_value']:.1f}%"
+        ])
         writer.writerow([])
         
         # Write top selling products
@@ -321,6 +379,28 @@ def reports(request):
                 product.total_sales,
                 f"${product.revenue:.2f}" if product.revenue else "$0.00"
             ])
+        writer.writerow([])
+        
+        # Write most profitable products
+        writer.writerow(['Most Profitable Products'])
+        writer.writerow(['Product', 'Category', 'Revenue', 'Cost', 'Profit'])
+        for product in most_profitable:
+            writer.writerow([
+                product.name,
+                product.category,
+                f"${product.revenue:.2f}",
+                f"${product.cost:.2f}",
+                f"${product.profit:.2f}"
+            ])
+        writer.writerow([])
+        
+        # Write customer insights
+        writer.writerow(['Customer Insights'])
+        writer.writerow(['Metric', 'Value'])
+        writer.writerow(['Total Customers', customer_insights['total_customers']])
+        writer.writerow(['Repeat Customers', customer_insights['repeat_customers']])
+        writer.writerow(['Customer Retention Rate', f"{customer_insights['retention_rate']:.1f}%"])
+        writer.writerow(['Average Purchase Value', f"${customer_insights['average_purchase']:.2f}"])
         
         return response
 
@@ -329,11 +409,15 @@ def reports(request):
         'yearly_comparison': yearly_comparison,
         'financial_metrics': financial_metrics,
         'top_selling': top_selling,
+        'most_profitable': most_profitable,
+        'inventory_health': inventory_health,
+        'customer_insights': customer_insights,
         'low_stock': low_stock,
         'months': months,
         'years': years,
         'selected_month': selected_month,
         'selected_year': selected_year,
+        'user_type': request.user.user_type,
     }
     return render(request, 'reports.html', context)
 
@@ -529,8 +613,145 @@ def user_details(request, user_type):
     })
 
 @login_required
+def add_funds(request):
+    if request.method == 'POST':
+        try:
+            amount = float(request.POST.get('amount', 0))
+            if amount <= 0:
+                messages.error(request, 'Please enter a positive amount.')
+                return redirect('profile')
+            
+            # Update user balance - convert float to Decimal to avoid type mismatch
+            from decimal import Decimal
+            user = request.user
+            user.balance += Decimal(str(amount))
+            user.save()
+            
+            # Log the activity
+            ActivityLog.objects.create(
+                user=user,
+                action=f'Added ${amount:.2f} to account balance',
+                details=f'New balance: ${user.balance:.2f}'
+            )
+            
+            messages.success(request, f'Successfully added ${amount:.2f} to your balance.')
+        except ValueError:
+            messages.error(request, 'Invalid amount format.')
+        except Exception as e:
+            messages.error(request, f'Error processing your request: {str(e)}')
+    
+    return redirect('profile')
+
+@login_required
+def set_balance(request):
+    if request.method == 'POST':
+        try:
+            from decimal import Decimal
+            new_balance = Decimal(str(request.POST.get('balance', 0)))
+            
+            if new_balance < 0:
+                messages.error(request, 'Balance cannot be negative.')
+                return redirect('profile')
+                
+            user = request.user
+            old_balance = user.balance
+            user.balance = new_balance
+            user.save()
+            
+            # Log the activity
+            ActivityLog.objects.create(
+                user=user,
+                action=f'Set account balance to ${new_balance:.2f}',
+                details=f'Previous balance: ${old_balance:.2f}'
+            )
+            
+            messages.success(request, f'Successfully set balance to ${new_balance:.2f}.')
+        except ValueError:
+            messages.error(request, 'Invalid balance format.')
+        except Exception as e:
+            messages.error(request, f'Error processing your request: {str(e)}')
+    
+    return redirect('profile')
+
+@login_required
 def support(request):
-    return render(request, 'support.html')
+    if request.user.user_type == 'staff' and not request.user.is_superuser:
+        # Staff view - show all tickets
+        tickets = SupportTicket.objects.all()
+        if request.method == 'POST':
+            ticket_id = request.POST.get('ticket_id')
+            ticket = get_object_or_404(SupportTicket, id=ticket_id)
+            form = TicketResponseForm(request.POST)
+            if form.is_valid():
+                response = form.save(commit=False)
+                response.ticket = ticket
+                response.user = request.user
+                response.save()
+                
+                # Update ticket status to in_progress
+                if ticket.status == 'open' or ticket.status == 'unresolved':
+                    ticket.status = 'in_progress'
+                    ticket.assigned_to = request.user
+                    ticket.save()
+                
+                messages.success(request, 'Response added successfully')
+                return redirect('support')
+        else:
+            form = TicketResponseForm()
+        
+        return render(request, 'support_staff.html', {
+            'tickets': tickets,
+            'form': form
+        })
+    else:
+        # Admin/Supplier view - show own tickets and form to create new ones
+        tickets = SupportTicket.objects.filter(created_by=request.user)
+        
+        if request.method == 'POST':
+            action = request.POST.get('action')
+            
+            if action == 'create_ticket':
+                form = SupportTicketForm(request.POST)
+                if form.is_valid():
+                    ticket = form.save(commit=False)
+                    ticket.created_by = request.user
+                    ticket.save()
+                    messages.success(request, 'Support ticket created successfully')
+                    return redirect('support')
+            
+            elif action == 'respond':
+                ticket_id = request.POST.get('ticket_id')
+                ticket = get_object_or_404(SupportTicket, id=ticket_id, created_by=request.user)
+                form = TicketResponseForm(request.POST)
+                if form.is_valid():
+                    response = form.save(commit=False)
+                    response.ticket = ticket
+                    response.user = request.user
+                    response.save()
+                    messages.success(request, 'Response added successfully')
+                    return redirect('support')
+            
+            elif action == 'resolve':
+                ticket_id = request.POST.get('ticket_id')
+                ticket = get_object_or_404(SupportTicket, id=ticket_id, created_by=request.user)
+                ticket.status = 'resolved'
+                ticket.save()
+                messages.success(request, 'Ticket marked as resolved')
+                return redirect('support')
+            
+            elif action == 'unresolve':
+                ticket_id = request.POST.get('ticket_id')
+                ticket = get_object_or_404(SupportTicket, id=ticket_id, created_by=request.user)
+                ticket.status = 'unresolved'
+                ticket.save()
+                messages.success(request, 'Ticket marked as unresolved')
+                return redirect('support')
+        
+        form = SupportTicketForm()
+        return render(request, 'support.html', {
+            'tickets': tickets,
+            'form': form
+        })
 
 @login_required
 @user_passes_test(lambda u: u.is_superuser or u.user_type == 'admin')
@@ -542,12 +763,16 @@ def supplier_products(request, supplier_id):
         product_id = request.POST.get('product_id')
         quantity = int(request.POST.get('buy_quantity', 0))
         
+        if quantity <= 0:
+            messages.error(request, 'Please enter a valid quantity.')
+            return redirect('supplier_products', supplier_id=supplier_id)
+            
         product = get_object_or_404(Produit, id=product_id)
         total_cost = product.price * quantity
         
         # Check if buyer has enough money
         if request.user.balance < total_cost:
-            messages.error(request, 'Insufficient funds for this purchase.')
+            messages.error(request, 'Insufficient funds for this purchase. Please add more funds to your account.')
             return redirect('supplier_products', supplier_id=supplier_id)
             
         # Check if supplier has enough stock
@@ -556,11 +781,19 @@ def supplier_products(request, supplier_id):
             return redirect('supplier_products', supplier_id=supplier_id)
             
         try:
-            # Start money transfer
-            request.user.balance -= total_cost
-            supplier.balance += total_cost
+            # Start money transfer - convert float to Decimal to avoid type mismatch
+            from decimal import Decimal
+            decimal_cost = Decimal(str(total_cost))
             
-            # Update product quantities
+            # Double-check balance is sufficient (in case it changed)
+            if request.user.balance < decimal_cost:
+                messages.error(request, 'Insufficient funds for this purchase.')
+                return redirect('supplier_products', supplier_id=supplier_id)
+                
+            request.user.balance -= decimal_cost
+            supplier.balance += decimal_cost
+            
+            # Update product quantities for the buyer (admin)
             # First, check if buyer already has this product
             buyer_product = Produit.objects.filter(
                 name=product.name,
@@ -573,7 +806,7 @@ def supplier_products(request, supplier_id):
                 buyer_product.save()
             else:
                 # Create new product entry for buyer
-                Produit.objects.create(
+                buyer_product = Produit.objects.create(
                     name=product.name,
                     category=product.category,
                     price=product.price,
@@ -589,8 +822,8 @@ def supplier_products(request, supplier_id):
             supplier.save()
             product.save()
             
-            # Record transaction
-            Transaction.objects.create(
+            # Create the transaction record
+            transaction = Transaction.objects.create(
                 produit=product,
                 type='supplier_purchase',
                 quantity=quantity,
@@ -598,6 +831,21 @@ def supplier_products(request, supplier_id):
                 from_user=supplier,
                 to_user=request.user
             )
+            
+            # Since the transaction.save() already updated balances, we need to fix them
+            # by adding back the amount that was deducted (we already did it manually above)
+            from decimal import Decimal
+            request.user.balance += Decimal(str(total_cost))
+            supplier.balance -= Decimal(str(total_cost))
+            request.user.save()
+            supplier.save()
+            
+            # The Transaction.save() method incorrectly adds to the supplier's product quantity
+            # We need to fix it by subtracting the correct amount
+            # Since we want to subtract just 'quantity', but the save method added 'quantity',
+            # we need to subtract 2 * quantity to get the correct result
+            product.quantity = product.quantity - quantity - quantity  # Correct the quantity
+            product.save()
             
             messages.success(request, f'Successfully purchased {quantity} units of {product.name}')
             

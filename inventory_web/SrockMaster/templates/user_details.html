@@ -2,6 +2,12 @@
 {% block title %}{{ title }} - StockMaster{% endblock %}
 {% block content %}
 <div class="details-container">
+    <div class="back-button-top">
+        <a href="{% url 'analytics' %}" class="btn-back">
+            <i class="fas fa-arrow-left"></i> Back to Analytics
+        </a>
+    </div>
+    
     <div class="page-header">
         <h1>{{ title }}</h1>
         <p class="subtitle">View and manage {{ title|lower }}</p>
@@ -13,7 +19,7 @@
                 <i class="fas fa-users"></i>
             </div>
             <div class="stat-details">
-                <h3>Total {{ title }}</h3>
+                <h3 style="color: white;">Total {{ title }}</h3>
                 <p class="stat-number">{{ users|length }}</p>
             </div>
         </div>
@@ -85,11 +91,7 @@
         </div>
     </div>
 
-    <div class="back-button">
-        <a href="{% url 'analytics' %}" class="btn-back">
-            <i class="fas fa-arrow-left"></i> Back to Analytics
-        </a>
-    </div>
+
 </div>
 
 <style>
@@ -102,6 +104,10 @@
 .page-header {
     text-align: center;
     margin-bottom: 2rem;
+}
+
+.back-button-top {
+    margin-bottom: 1rem;
 }
 
 .page-header h1 {

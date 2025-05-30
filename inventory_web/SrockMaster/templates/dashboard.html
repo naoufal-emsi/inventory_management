@@ -17,39 +17,99 @@
         <h3><i class="fas fa-dollar-sign"></i> Total Stock Value</h3>
         <p>${{ total_value|floatformat:2 }}</p>
     </div>
+    <div class="stat-card" style="border-left:6px solid #8b5cf6;">
+        <h3><i class="fas fa-wallet"></i> Current Balance</h3>
+        <p>${{ request.user.balance|floatformat:2 }}</p>
+    </div>
 </div>
 
-<div class="recent-activities" style="margin-top:2rem;">
-    <h2>Recent Transactions</h2>
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Date</th>
-                <th>Product</th>
-                <th>Type</th>
-                <th>Quantity</th>
-                <th>Price</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for transaction in recent_transactions %}
-            <tr>
-                <td>{{ transaction.date }}</td>
-                <td>{{ transaction.produit.name }}</td>
-                <td>
-                    {% if transaction.type == 'sale' %}
-                        <span style="color:#22c55e;"><i class="fas fa-arrow-up"></i> {{ transaction.get_type_display }}</span>
-                    {% else %}
-                        <span style="color:#6366f1;"><i class="fas fa-arrow-down"></i> {{ transaction.get_type_display }}</span>
-                    {% endif %}
-                </td>
-                <td>{{ transaction.quantity }}</td>
-                <td>${{ transaction.price }}</td>
-            </tr>
-            {% empty %}
-            <tr><td colspan="5" style="text-align:center;">No recent transactions.</td></tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<div class="dashboard-sections">
+    <div class="dashboard-section">
+        <h2>Recent Transactions</h2>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Product</th>
+                    <th>Type</th>
+                    <th>Quantity</th>
+                    <th>Price</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for transaction in recent_transactions %}
+                <tr>
+                    <td>{{ transaction.date }}</td>
+                    <td>{{ transaction.produit.name }}</td>
+                    <td>
+                        {% if transaction.type == 'sale' %}
+                            <span style="color:#22c55e;"><i class="fas fa-arrow-up"></i> {{ transaction.get_type_display }}</span>
+                        {% else %}
+                            <span style="color:#6366f1;"><i class="fas fa-arrow-down"></i> {{ transaction.get_type_display }}</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ transaction.quantity }}</td>
+                    <td>${{ transaction.price }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" style="text-align:center;">No recent transactions.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="dashboard-section">
+        <h2>Recent Balance Activities</h2>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Action</th>
+                    <th>Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for activity in balance_transactions %}
+                <tr>
+                    <td>{{ activity.timestamp|date:"Y-m-d H:i" }}</td>
+                    <td>{{ activity.action }}</td>
+                    <td>{{ activity.details }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="3" style="text-align:center;">No recent balance activities.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
+
+<style>
+.dashboard-sections {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.dashboard-section {
+    background: white;
+    border-radius: 10px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.dashboard-section h2 {
+    margin-bottom: 1rem;
+    font-size: 1.25rem;
+    color: #1f2937;
+    border-bottom: 1px solid #e5e7eb;
+    padding-bottom: 0.75rem;
+}
+
+@media (min-width: 1024px) {
+    .dashboard-sections {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+</style>
 {% endblock %}

@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.conf import settings
 from django import forms
+from decimal import Decimal
 
 class CustomUser(AbstractUser):
     USER_TYPE_CHOICES = (
@@ -80,8 +81,15 @@ class Transaction(models.Model):
         super().save(*args, **kwargs)
 
     def _update_balances(self, transaction, reverse=False):
+        # Calculate the total amount for the transaction
+        total_amount = transaction.price * transaction.quantity
+        
+        # Apply the multiplier based on whether we're reversing the transaction
         multiplier = -1 if reverse else 1
-        amount = transaction.total * multiplier
+        
+        # Convert to Decimal to avoid type mismatch
+        from decimal import Decimal
+        amount = Decimal(str(total_amount * multiplier))
 
         if transaction.type == 'sale':
             # In a sale, from_user receives money, to_user pays
@@ -133,6 +141,48 @@ class ActivityLog(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.action} at {self.timestamp}"
+
+class SupportTicket(models.Model):
+    STATUS_CHOICES = [
+        ('open', 'Open'),
+        ('in_progress', 'In Progress'),
+        ('resolved', 'Resolved'),
+        ('unresolved', 'Unresolved'),
+    ]
+    
+    PRIORITY_CHOICES = [
+        ('low', 'Low'),
+        ('medium', 'Medium'),
+        ('high', 'High'),
+        ('urgent', 'Urgent'),
+    ]
+    
+    title = models.CharField(max_length=200)
+    description = models.TextField()
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='created_tickets')
+    assigned_to = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_tickets', limit_choices_to={'user_type': 'staff'})
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='open')
+    priority = models.CharField(max_length=10, choices=PRIORITY_CHOICES, default='medium')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f"{self.title} - {self.get_status_display()}"
+    
+    class Meta:
+        ordering = ['-updated_at']
+
+class TicketResponse(models.Model):
+    ticket = models.ForeignKey(SupportTicket, on_delete=models.CASCADE, related_name='responses')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    message = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"Response to {self.ticket.title} by {self.user.username}"
+    
+    class Meta:
+        ordering = ['created_at']
 
 class CustomUserCreationForm(forms.ModelForm):
     password1 = forms.CharField(label='Password', widget=forms.PasswordInput)
@@ -214,3 +264,19 @@ class ProfileUpdateForm(forms.ModelForm):
         if commit:
             user.save()
         return user
+
+class SupportTicketForm(forms.ModelForm):
+    class Meta:
+        model = SupportTicket
+        fields = ['title', 'description', 'priority']
+        widgets = {
+            'description': forms.Textarea(attrs={'rows': 5}),
+        }
+
+class TicketResponseForm(forms.ModelForm):
+    class Meta:
+        model = TicketResponse
+        fields = ['message']
+        widgets = {
+            'message': forms.Textarea(attrs={'rows': 3}),
+        }

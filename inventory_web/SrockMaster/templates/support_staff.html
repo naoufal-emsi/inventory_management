@@ -1,55 +1,31 @@
 {% extends 'base.html' %}
-{% block title %}Support - StockMaster{% endblock %}
+{% block title %}Support Dashboard - StockMaster{% endblock %}
 {% block content %}
 <div class="support-container">
     <div class="page-header">
-        <h1>Support Center</h1>
-        <p class="subtitle">Submit a support request and track your tickets</p>
+        <h1>Support Dashboard</h1>
+        <p class="subtitle">Manage and respond to support tickets</p>
     </div>
 
     <div class="content-section">
         <div class="section-header">
-            <h2><i class="fas fa-ticket-alt"></i> Create New Support Ticket</h2>
-        </div>
-        
-        <form method="POST" class="support-form">
-            {% csrf_token %}
-            <input type="hidden" name="action" value="create_ticket">
-            
-            <div class="form-group">
-                <label for="id_title">Title</label>
-                {{ form.title }}
-                <div class="form-hint">Briefly describe your issue</div>
+            <h2><i class="fas fa-clipboard-list"></i> All Support Tickets</h2>
+            <div class="filter-controls">
+                <select id="statusFilter" onchange="filterTickets()">
+                    <option value="all">All Statuses</option>
+                    <option value="open">Open</option>
+                    <option value="in_progress">In Progress</option>
+                    <option value="resolved">Resolved</option>
+                    <option value="unresolved">Unresolved</option>
+                </select>
+                <input type="text" id="searchInput" onkeyup="filterTickets()" placeholder="Search tickets...">
             </div>
-            
-            <div class="form-group">
-                <label for="id_description">Description</label>
-                {{ form.description }}
-                <div class="form-hint">Please provide as much detail as possible</div>
-            </div>
-            
-            <div class="form-group">
-                <label for="id_priority">Priority</label>
-                {{ form.priority }}
-            </div>
-            
-            <div class="form-actions">
-                <button type="submit" class="btn-submit">
-                    <i class="fas fa-paper-plane"></i> Submit Ticket
-                </button>
-            </div>
-        </form>
-    </div>
-
-    <div class="content-section">
-        <div class="section-header">
-            <h2><i class="fas fa-clipboard-list"></i> Your Support Tickets</h2>
         </div>
         
         {% if tickets %}
             <div class="tickets-list">
                 {% for ticket in tickets %}
-                    <div class="ticket-card {% if ticket.status == 'open' %}status-open{% elif ticket.status == 'in_progress' %}status-progress{% elif ticket.status == 'resolved' %}status-resolved{% else %}status-unresolved{% endif %}">
+                    <div class="ticket-card {% if ticket.status == 'open' %}status-open{% elif ticket.status == 'in_progress' %}status-progress{% elif ticket.status == 'resolved' %}status-resolved{% else %}status-unresolved{% endif %}" data-status="{{ ticket.status }}">
                         <div class="ticket-header" onclick="toggleTicket({{ ticket.id }})">
                             <h3>{{ ticket.title }}</h3>
                             <div class="ticket-controls">
@@ -60,10 +36,13 @@
                         
                         <div id="ticket-content-{{ ticket.id }}" class="ticket-content collapsed">
                             <div class="ticket-details">
+                                <p><strong>Created by:</strong> {{ ticket.created_by.get_full_name }}</p>
                                 <p><strong>Created:</strong> {{ ticket.created_at|date:"M d, Y H:i" }}</p>
                                 <p><strong>Priority:</strong> {{ ticket.get_priority_display }}</p>
                                 {% if ticket.assigned_to %}
                                     <p><strong>Assigned to:</strong> {{ ticket.assigned_to.get_full_name }}</p>
+                                {% else %}
+                                    <p><strong>Assigned to:</strong> <span class="unassigned">Unassigned</span></p>
                                 {% endif %}
                             </div>
                             
@@ -91,40 +70,15 @@
                                 
                                 <form method="POST" class="response-form">
                                     {% csrf_token %}
-                                    <input type="hidden" name="action" value="respond">
                                     <input type="hidden" name="ticket_id" value="{{ ticket.id }}">
                                     <div class="form-group">
-                                        <label for="id_message">Add Response</label>
-                                        <textarea name="message" id="id_message" rows="3" required></textarea>
+                                        <label for="id_message_{{ ticket.id }}">Add Response</label>
+                                        <textarea name="message" id="id_message_{{ ticket.id }}" rows="3" required></textarea>
                                     </div>
                                     <button type="submit" class="btn-submit">
                                         <i class="fas fa-reply"></i> Send Response
                                     </button>
                                 </form>
-                            </div>
-                            
-                            <div class="ticket-actions">
-                                {% if ticket.status == 'in_progress' or ticket.status == 'unresolved' %}
-                                    <form method="POST" style="display: inline;">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="action" value="resolve">
-                                        <input type="hidden" name="ticket_id" value="{{ ticket.id }}">
-                                        <button type="submit" class="btn-resolve">
-                                            <i class="fas fa-check-circle"></i> Mark as Resolved
-                                        </button>
-                                    </form>
-                                {% endif %}
-                                
-                                {% if ticket.status == 'resolved' %}
-                                    <form method="POST" style="display: inline;">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="action" value="unresolve">
-                                        <input type="hidden" name="ticket_id" value="{{ ticket.id }}">
-                                        <button type="submit" class="btn-unresolve">
-                                            <i class="fas fa-times-circle"></i> Mark as Unresolved
-                                        </button>
-                                    </form>
-                                {% endif %}
                             </div>
                         </div>
                     </div>
@@ -133,7 +87,7 @@
         {% else %}
             <div class="empty-state">
                 <i class="fas fa-ticket-alt"></i>
-                <p>You haven't created any support tickets yet.</p>
+                <p>There are no support tickets in the system.</p>
             </div>
         {% endif %}
     </div>
@@ -187,65 +141,17 @@
     gap: 0.5rem;
 }
 
-.support-form {
-    max-width: 800px;
-    margin: 0 auto;
+.filter-controls {
+    display: flex;
+    gap: 1rem;
 }
 
-.form-group {
-    margin-bottom: 1.5rem;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: 600;
-    color: #1f2937;
-}
-
-.form-group input,
-.form-group textarea,
-.form-group select {
-    width: 100%;
-    padding: 0.75rem;
+.filter-controls select,
+.filter-controls input {
+    padding: 0.5rem;
     border: 1px solid #e5e7eb;
     border-radius: 6px;
-    font-size: 1rem;
-}
-
-.form-group textarea {
-    min-height: 120px;
-}
-
-.form-hint {
     font-size: 0.875rem;
-    color: #6b7280;
-    margin-top: 0.25rem;
-}
-
-.form-actions {
-    display: flex;
-    justify-content: flex-end;
-    margin-top: 1.5rem;
-}
-
-.btn-submit {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.75rem 1.5rem;
-    background: #6366f1;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    font-size: 1rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.btn-submit:hover {
-    background: #4f46e5;
 }
 
 .tickets-list {
@@ -357,6 +263,11 @@
     overflow: hidden;
 }
 
+.unassigned {
+    color: #ef4444;
+    font-style: italic;
+}
+
 .ticket-details {
     display: flex;
     flex-wrap: wrap;
@@ -424,52 +335,42 @@
     border-top: 1px solid #e5e7eb;
 }
 
-.ticket-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 1rem;
-    margin-top: 1.5rem;
-    padding-top: 1.5rem;
-    padding-bottom: 1.5rem;
-    border-top: 1px solid #e5e7eb;
+.form-group {
+    margin-bottom: 1rem;
 }
 
-.btn-resolve {
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.form-group textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    font-size: 1rem;
+}
+
+.btn-submit {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    background: #10b981;
+    padding: 0.75rem 1.5rem;
+    background: #6366f1;
     color: white;
     border: none;
     border-radius: 6px;
-    font-size: 0.875rem;
+    font-size: 1rem;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.3s ease;
 }
 
-.btn-resolve:hover {
-    background: #059669;
-}
-
-.btn-unresolve {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    background: #ef4444;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    font-size: 0.875rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.btn-unresolve:hover {
-    background: #dc2626;
+.btn-submit:hover {
+    background: #4f46e5;
 }
 
 .empty-state {
@@ -499,6 +400,27 @@ function toggleTicket(ticketId) {
         icon.classList.remove('fa-chevron-up');
         icon.classList.add('fa-chevron-down');
     }
+}
+
+function filterTickets() {
+    const statusFilter = document.getElementById('statusFilter').value;
+    const searchInput = document.getElementById('searchInput').value.toUpperCase();
+    const tickets = document.querySelectorAll('.ticket-card');
+    
+    tickets.forEach(ticket => {
+        const status = ticket.getAttribute('data-status');
+        const title = ticket.querySelector('h3').textContent.toUpperCase();
+        const description = ticket.querySelector('.ticket-description').textContent.toUpperCase();
+        
+        const statusMatch = statusFilter === 'all' || status === statusFilter;
+        const searchMatch = title.includes(searchInput) || description.includes(searchInput);
+        
+        if (statusMatch && searchMatch) {
+            ticket.style.display = '';
+        } else {
+            ticket.style.display = 'none';
+        }
+    });
 }
 </script>
 {% endblock %}
